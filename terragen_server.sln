@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "terragen_server", "terragen_server\terragen_server.csproj", "{3B4C0694-21F0-4A7D-ABEA-229ABA4E11E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{0D0E7684-1791-4C6F-B81E-AA22FF235D8A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3B4C0694-21F0-4A7D-ABEA-229ABA4E11E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B4C0694-21F0-4A7D-ABEA-229ABA4E11E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B4C0694-21F0-4A7D-ABEA-229ABA4E11E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B4C0694-21F0-4A7D-ABEA-229ABA4E11E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D0E7684-1791-4C6F-B81E-AA22FF235D8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D0E7684-1791-4C6F-B81E-AA22FF235D8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D0E7684-1791-4C6F-B81E-AA22FF235D8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D0E7684-1791-4C6F-B81E-AA22FF235D8A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
