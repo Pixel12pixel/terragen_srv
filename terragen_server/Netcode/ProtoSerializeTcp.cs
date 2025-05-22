@@ -3,7 +3,7 @@ using terragen_server.Netcode.TCP.DataModels;
 
 namespace terragen_server.Netcode;
 
-public class ProtoSerialize()
+public class ProtoSerializeTcp()
 {
     private const int ENVELOPE_HEADER_SIZE = 50;
 
@@ -11,7 +11,7 @@ public class ProtoSerialize()
 
     private readonly Dictionary<string, List<EnvelopeModel>> _incompleteMessages = new();
 
-    public ProtoSerialize(int packetSize) : this()
+    public ProtoSerializeTcp(int packetSize) : this()
     {
         PacketSize = packetSize;
     }
@@ -172,7 +172,9 @@ public class ProtoSerialize()
         return messageType switch
         {
             MessageType.LOGIN => Serializer.Deserialize<LoginModel>(stream),
-            MessageType.LOGIN_RESPONSE => Serializer.Deserialize<LoginRespondModel>(stream),
+            MessageType.DISCONNECT => Serializer.Deserialize<DisconnectModel>(stream),
+            MessageType.CHAT => Serializer.Deserialize<ChatMessageModel>(stream),
+            MessageType.BLOCK_UPDATE => Serializer.Deserialize<BlockUpdateModel>(stream),
             _ => null
         };
     }

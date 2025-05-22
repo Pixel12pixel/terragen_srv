@@ -20,7 +20,7 @@ internal class Program
     {
         Console.Title = "Terragen Server";
         
-        //Starting log sequeqnce
+        
         var versionAttribute = Assembly
             .GetExecutingAssembly()
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>();
@@ -71,18 +71,31 @@ internal class Program
         try
         {
             //try to load / generate a chunk
+
+            UserModel model = new UserModel()
+            {
+                Username = "a",
+                UdpAddress = "123.123.123.123",
+                UdpPort = "1234",
+                X = 0,
+                Y = 0,
+                Z = 0,
+                RotationX = 0,
+            };
             
-            mapManager.GetChunk(0, 0);
+            userManager.AddUser(model);
             
-            mapManager.GetChunk(0, -1);
+            //mapManager.GetChunk(0, 0);
             
-            mapManager.GetChunk(-1, 0);
+            //mapManager.GetChunk(0, -1);
             
-            mapManager.GetChunk(-1, -1);
+            //mapManager.GetChunk(-1, 0);
+            
+            //mapManager.GetChunk(-1, -1);
         }
         catch (Exception e)
         {
-            SrvLog.Console.Log("TERRAGEN_SERVER", e.Message, LogTypes.ERROR);
+            SrvLog.Console.Log("TERRAGEN_SERVER", "aa" + e.Message, LogTypes.ERROR);
             
             await Task.Delay(5000, cts.Token);
             

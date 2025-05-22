@@ -12,7 +12,7 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
     
     private const int Version = 1;
     
-    private readonly ProtoSerialize _protoSerialize = new ProtoSerialize(PacketSize);
+    private readonly ProtoSerializeTcp _protoSerializeTcp = new ProtoSerializeTcp(PacketSize);
     
     /// <summary>
     /// Starts the TCP listener.
@@ -82,7 +82,7 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
         {
             var bytesRead = await client.ReceiveAsync(buffer, SocketFlags.None);
             
-            var login = _protoSerialize.Deserialize(buffer, bytesRead);
+            var login = _protoSerializeTcp.Deserialize(buffer, bytesRead);
 
             if (login is LoginModel loginModel)
             {
@@ -98,7 +98,7 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
                     udpPort = udpPort
                 };
             
-                var loginRespondBytes = _protoSerialize.Serialize(loginRespondModel, MessageType.LOGIN_RESPONSE);
+                var loginRespondBytes = _protoSerializeTcp.Serialize(loginRespondModel, MessageType.LOGIN_RESPONSE);
 
                 if (loginRespondBytes.Count == 1)
                 {
@@ -144,7 +144,7 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
                 
                 var readBytes = await user.Socket.ReceiveAsync(buffer, SocketFlags.None); //TODO: add cts
             
-                var message = _protoSerialize.Deserialize(buffer, readBytes);
+                var message = _protoSerializeTcp.Deserialize(buffer, readBytes);
 
                 if (message is null) 
                     continue; //fragmented message, not all packets received yet

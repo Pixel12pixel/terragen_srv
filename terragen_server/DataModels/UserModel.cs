@@ -9,6 +9,8 @@ public class UserModel
     
     public string UdpAddress { get; set; } = string.Empty;
     
+    public string UdpPort { get; set; } = string.Empty;
+    
     public int X { get; set; }
     
     public int Y { get; set; }
