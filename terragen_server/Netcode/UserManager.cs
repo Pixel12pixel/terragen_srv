@@ -1,4 +1,5 @@
-﻿using terragen_server.DataModels;
+﻿using System.Net;
+using terragen_server.DataModels;
 using terragen_server.Map;
 
 namespace terragen_server.Netcode;
@@ -91,16 +92,25 @@ public class UserManager(MapManager mapManager)
         var userChunkX = Math.DivRem(x, 16, out _) - (x < 0 ? 1 : 0);
         var userChunkZ = Math.DivRem(z, 16, out _) - (z < 0 ? 1 : 0);
 
-        var regionCorner1X = Math.DivRem(userChunkX + RenderDistance, 16, out _) - ((userChunkX + RenderDistance) < 0 ? 1 : 0);
-        var regionCorner1Z = Math.DivRem(userChunkZ + RenderDistance, 16, out _) - ((userChunkZ + RenderDistance) < 0 ? 1 : 0);
+        var chunkMinX = userChunkX - RenderDistance;
+        var chunkMaxX = userChunkX + RenderDistance;
+        var chunkMinZ = userChunkZ - RenderDistance;
+        var chunkMaxZ = userChunkZ + RenderDistance;
 
-        var regionCorner2X = Math.DivRem(userChunkX - RenderDistance, 16, out _) - ((userChunkX - RenderDistance) < 0 ? 1 : 0);
-        var regionCorner2Z = Math.DivRem(userChunkZ - RenderDistance, 16, out _) - ((userChunkZ - RenderDistance) < 0 ? 1 : 0);
+        
+        var regionMinX = Math.DivRem(chunkMinX, 16, out _) - (chunkMinX < 0 ? 1 : 0);
+        var regionMaxX = Math.DivRem(chunkMaxX, 16, out _) - (chunkMaxX < 0 ? 1 : 0);
+        var regionMinZ = Math.DivRem(chunkMinZ, 16, out _) - (chunkMinZ < 0 ? 1 : 0);
+        var regionMaxZ = Math.DivRem(chunkMaxZ, 16, out _) - (chunkMaxZ < 0 ? 1 : 0);
 
-        var newRegions = Enumerable.Range(regionCorner1X, regionCorner2X - regionCorner1X + 1)
-            .SelectMany(i => Enumerable.Range(regionCorner1Z, regionCorner2Z - regionCorner1Z + 1)
+        var rangeX = regionMaxX - regionMinX + 1;
+        var rangeZ = regionMaxZ - regionMinZ + 1;
+
+        var newRegions = Enumerable.Range(regionMinX, rangeX)
+            .SelectMany(i => Enumerable.Range(regionMinZ, rangeZ)
                 .Select(j => $"{i}_{j}"))
             .ToList();
+
 
         if (_users[index].ActiveRegions.SequenceEqual(newRegions))
         {
@@ -136,5 +146,25 @@ public class UserManager(MapManager mapManager)
             }
         }
         
+    }
+    
+    /// <summary>
+    /// Gets a user by their endpoint.
+    /// </summary>
+    /// <param name="endPoint">user IPEndPoint</param>
+    /// <returns>user model</returns>
+    public UserModel? GetUserByEndPoint(IPEndPoint endPoint)
+    {
+        var udpAddr = endPoint.Address.ToString();
+        var udpPort = endPoint.Port.ToString();
+
+        try
+        {
+            return _users.FirstOrDefault(user => user.UdpAddress.Equals(udpAddr) && user.UdpPort.Equals(udpPort));
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
     }
 }

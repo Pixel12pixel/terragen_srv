@@ -27,4 +27,10 @@ public enum MessageType
     UNDEFINED = 0,
     LOGIN = 1,
     LOGIN_RESPONSE = 2,
+    DISCONNECT = 3,
+    CHAT = 4,
+    CHAT_BROADCAST = 5,
+    POSITION_UPDATE = 6,
+    POSITION_UPDATE_BROADCAST = 7,
+    BLOCK_UPDATE = 8,
 }
