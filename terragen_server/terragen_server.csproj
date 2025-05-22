@@ -30,4 +30,10 @@
       <PackageReference Include="protobuf-net" Version="3.2.52" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Update="lib\FastNoise.dll">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>
