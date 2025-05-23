@@ -8,6 +8,8 @@ public class UserManager(MapManager mapManager)
 {
     private const int RenderDistance = 16;
     
+    private Dictionary<string, int> _loadedChunks = [];
+    
     private Dictionary<string, int> _loadedRegions = [];
     
     private List<UserModel> _users = [];
@@ -44,7 +46,7 @@ public class UserManager(MapManager mapManager)
         {
             if (_loadedRegions.TryGetValue(region, out var count) && --count == 0)
             {
-                _loadedRegions.Remove(region);
+                //_loadedRegions.Remove(region);
                 mapManager.RemoveRegion(region);
             }
             else
@@ -76,7 +78,7 @@ public class UserManager(MapManager mapManager)
     /// <param name="x">X coordinate</param>
     /// <param name="y">Y coordinate</param>
     /// <param name="z">Z coordinate</param>
-    /// <param name="rot">X axis rotation</param>
+    /// <param name="rot">X-axis rotation</param>
     /// <param name="user">User model</param>
     public void UpdatePosition(int x, int y, int z, float rot, UserModel user)
     {
@@ -146,6 +148,42 @@ public class UserManager(MapManager mapManager)
             }
         }
         
+        _users[index].ActiveRegions = newRegions;
+        
+        var chunkRangeX = chunkMaxX - chunkMinX + 1;
+        var chunkRangeZ = chunkMaxZ - chunkMinZ + 1;
+        
+        var newChunks = Enumerable.Range(chunkMinX, chunkRangeX)
+            .SelectMany(i => Enumerable.Range(chunkMinZ, chunkRangeZ)
+                .Select(j => $"{i}_{j}"))
+            .ToList();
+        
+        var chunksToLoad = newChunks.Except(_users[index].ActiveChunks).ToList();
+        var chunksToUnload = _users[index].ActiveChunks.Except(newChunks).ToList();
+        
+        foreach (var t in chunksToLoad)
+        {
+            if (_loadedChunks.TryGetValue(t, out var count))
+            {
+                _loadedChunks[t] = count + 1;
+            }
+            else
+            {
+                _loadedChunks[t] = 1;
+                mapManager.GetChunk( int.Parse(t.Split('_')[0]), int.Parse(t.Split('_')[1]));
+            }
+        }
+        foreach (var t in chunksToUnload)
+        {
+            if (_loadedChunks.TryGetValue(t, out var count) && --count == 0)
+            {
+                _loadedChunks.Remove(t);
+            }
+            else
+            {
+                _loadedChunks[t] = count;
+            }
+        }
     }
     
     /// <summary>

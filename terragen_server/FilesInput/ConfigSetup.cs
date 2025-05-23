@@ -11,9 +11,9 @@ public class ConfigSetup
     /// <param name="ready">ready signal for supervisor</param>
     /// <param name="file">config path</param>
     /// <returns>config model</returns>
-    public ConfigModel? Run(TaskCompletionSource ready, string file = "\\config\\main.json")
+    public ConfigModel? Run(TaskCompletionSource ready, string file = "config\\main.json")
     {
-        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, file);
+        var path = Path.Combine(Directory.GetCurrentDirectory(), file);
         
         if (File.Exists(path))
         {

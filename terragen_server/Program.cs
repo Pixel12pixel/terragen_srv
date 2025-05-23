@@ -11,7 +11,7 @@ namespace terragen_server;
 
 internal class Program
 {
-    private readonly string _configPath = "\\config\\main.json";
+    private readonly string _configPath = "config\\main.json";
 
 
     private static void Main() => new Program().AsyncMain().GetAwaiter().GetResult();
@@ -68,20 +68,22 @@ internal class Program
         
         var userManager = new UserManager(mapManager);
         
+        UserModel model = new UserModel()
+        {
+            Username = "a",
+            UdpAddress = "123.123.123.123",
+            UdpPort = "1234",
+            X = 0,
+            Y = 0,
+            Z = 0,
+            RotationX = 0,
+        };
+        
         try
         {
             //try to load / generate a chunk
 
-            UserModel model = new UserModel()
-            {
-                Username = "a",
-                UdpAddress = "123.123.123.123",
-                UdpPort = "1234",
-                X = 0,
-                Y = 0,
-                Z = 0,
-                RotationX = 0,
-            };
+            
             
             userManager.AddUser(model);
             
@@ -95,7 +97,7 @@ internal class Program
         }
         catch (Exception e)
         {
-            SrvLog.Console.Log("TERRAGEN_SERVER", "aa" + e.Message, LogTypes.ERROR);
+            SrvLog.Console.Log("TERRAGEN_SERVER", e.Message, LogTypes.ERROR);
             
             await Task.Delay(5000, cts.Token);
             
@@ -124,6 +126,12 @@ internal class Program
         //Server startup complete
         
         SrvLog.Console.Log("TERRAGEN_SERVER", "Server started successfully", LogTypes.INFO);
+        
+        await Task.Delay(3000, cts.Token);
+        
+        
+        
+        userManager.UpdatePosition(16, 16, 16, 0, model);
         
         await Task.Delay(-1, cts.Token);
     }

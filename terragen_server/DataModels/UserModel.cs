@@ -25,6 +25,8 @@ public class UserModel
     
     public List<string> ActiveRegions { get; set; } = [];
     
+    public List<string> ActiveChunks { get; set; } = [];
+    
     
     
     
@@ -50,4 +52,5 @@ public class UserModel
     {
         //TODO: implement UDP send and lock
     }
+
 }
