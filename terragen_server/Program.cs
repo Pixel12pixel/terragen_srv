@@ -18,6 +18,8 @@ internal class Program
     
     private async Task AsyncMain()
     {
+        SrvLog.Console.SetLogLevel(LogTypes.INFO);
+        
         Console.Title = "Terragen Server";
         
         

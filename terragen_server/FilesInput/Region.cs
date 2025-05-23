@@ -1,4 +1,7 @@
-﻿namespace terragen_server.FilesInput;
+﻿using ProtoBuf;
+using terragen_server.DataModels.World;
+
+namespace terragen_server.FilesInput;
 
 public class Region() : IDisposable
 {
@@ -59,7 +62,7 @@ public class Region() : IDisposable
     /// </summary>
     private void LoadHeader()
     {
-        using var fs = new FileStream(_filePath, FileMode.Open);
+        using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Read);
         using var br = new BinaryReader(fs);
         
         for (var i = 0; i < ChucksPerRegion; i++)
@@ -68,9 +71,12 @@ public class Region() : IDisposable
             var length = br.ReadInt32();
             
             if (length > 0)
+                _chunkIndex[(i % RegionSize, i / RegionSize)] = (offset, length);
+            /*
+            if (length > 0)
             {
                 _chunkIndex.Add((i % RegionSize, i / RegionSize), (offset, length));
-            }
+            }*/
         }
     }
     
@@ -79,7 +85,39 @@ public class Region() : IDisposable
     /// </summary>
     /// <param name="x">X coordinate</param>
     /// <param name="z">Z coordinate</param>
-    /// <param name="data">chunk data</param>
+    /// <param name="chunk">chunk</param>
+    public void SaveChunk(int x, int z, ChunkModel chunk)
+    {
+        int index = GetChunkIndex(x, z);
+
+        using var ms = new MemoryStream();
+        Serializer.Serialize(ms, chunk);
+        byte[] data = ms.ToArray();
+
+        using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        fs.Seek(0, SeekOrigin.End); // dopisz na końcu
+        int offset = (int)fs.Position;
+        fs.Write(data);
+
+        // zaktualizuj nagłówek
+        fs.Seek(index * HeaderEntrySize, SeekOrigin.Begin);
+        using var bw = new BinaryWriter(fs);
+        bw.Write(offset);
+        bw.Write(data.Length);
+
+        //_chunkIndex[(x, z)] = (offset, data.Length);
+        try
+        {
+            _chunkIndex.Add((x, z), (offset, data.Length));
+        }
+        catch (Exception e)
+        {
+            SrvLog.Console.Log($"Failed to add chunk index: {e.Message}", SrvLog.LogTypes.WARNING);
+        }
+        
+    }
+    
+    /*
     public void SaveChunk(int x, int z, byte[] data)
     {
         var index = GetChunkIndex(x, z);
@@ -97,13 +135,30 @@ public class Region() : IDisposable
         
         _chunkIndex[(x, z)] = (offset, data.Length);
     }
-
+    */
+    
+    
     /// <summary>
     /// Loads a chunk from the region file.
     /// </summary>
     /// <param name="x">X coordinate</param>
     /// <param name="z">Z coordinate</param>
     /// <returns>chunk data, null if not exist</returns>
+    public ChunkModel? LoadChunk(int x, int z)
+    {
+        if (!_chunkIndex.TryGetValue((x, z), out var entry))
+            return null;
+
+        using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Read);
+        fs.Seek(entry.offset, SeekOrigin.Begin);
+        byte[] data = new byte[entry.length];
+        fs.ReadExactly(data);
+
+        using var ms = new MemoryStream(data);
+        return Serializer.Deserialize<ChunkModel>(ms);
+    }
+    
+    /*
     public byte[]? LoadChunk(int x, int z)
     {
         var index = GetChunkIndex(x, z);
@@ -119,7 +174,10 @@ public class Region() : IDisposable
 
         return null;
     }
-
+    */
+    
+    
+    
     /// <summary>
     /// Disposes the region object and clears the chunk index.
     /// </summary>

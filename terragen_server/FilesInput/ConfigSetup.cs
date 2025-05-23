@@ -76,7 +76,9 @@ public class ConfigSetup
             
             try
             {
-                File.Create(path);
+                {
+                    File.Create(path);
+                }
                 
                 var json = JsonSerializer.Serialize(GetDefaultConfig(), new JsonSerializerOptions
                 {
