@@ -97,7 +97,7 @@ public class MapManager
     {
         //TODO: generate new chunk
         //Mine code
-        
+
         var chunk = new ChunkModel
         {
             X = x,
@@ -106,7 +106,7 @@ public class MapManager
             ChunkData = new byte[65536]
         };
         RandomNumberGenerator.Fill(chunk.ChunkData);
-        
+
         return chunk;
     }
     
