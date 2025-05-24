@@ -38,7 +38,6 @@ public class UdpListener(int port, UserManager userManager)
     /// <param name="result">message from client</param>
     private async Task HandleClientAsync(UdpReceiveResult result)
     {
-        
         var user = userManager.GetUserByEndPoint(result.RemoteEndPoint);
         
         if (user == null)

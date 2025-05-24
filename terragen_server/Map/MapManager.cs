@@ -36,7 +36,7 @@ public class MapManager
         
         if (chunkBytes == null)
         {
-            SrvLog.Console.Log("MAP_MANAGER", $"new chunk region {regionKey}", SrvLog.LogTypes.DEBUG);
+            SrvLog.Console.Log("MAP_MANAGER", $"new chunk region {regionKey}. Chunk: {x}, {z}", SrvLog.LogTypes.DEBUG);
             var newChunk = GenerateNewChunk(x, z);
             region.SaveChunk(x % Region.GetRegionSize(), z % Region.GetRegionSize(), JsonSerializer.SerializeToUtf8Bytes(newChunk));
             return newChunk;
