@@ -2,6 +2,7 @@
 using System.Text.Json;
 using terragen_server.DataModels.World;
 using terragen_server.FilesInput;
+using terragen_server.Map.MapGeneration;
 
 namespace terragen_server.Map;
 
@@ -98,6 +99,7 @@ public class MapManager
         //TODO: generate new chunk
         //Mine code
 
+        /*
         var chunk = new ChunkModel
         {
             X = x,
@@ -108,6 +110,12 @@ public class MapManager
         RandomNumberGenerator.Fill(chunk.ChunkData);
 
         return chunk;
+        */
+        var terrainGen = new TerrainGen(1337, "GQAHAAENAAQAAAAAACBABwAAZmYmPwAAAAA/", "GQAHAAENAAQAAAAAACBABwAAZmYmPwAAAAA/");
+
+        var chunkData = terrainGen.GenerateChunks(x, z);
+
+        return chunkData;
     }
     
     /// <summary>

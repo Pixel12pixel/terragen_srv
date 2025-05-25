@@ -70,6 +70,9 @@ internal class Program
         
         var userManager = new UserManager(mapManager);
         
+        
+        
+        
         UserModel model = new UserModel()
         {
             Username = "a",
@@ -133,7 +136,7 @@ internal class Program
         
         
         
-        userManager.UpdatePosition(16, 16, 16, 0, model);
+        userManager.UpdatePosition(18, 14, 20, 0, model);
         
         await Task.Delay(-1, cts.Token);
     }

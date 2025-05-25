@@ -3,7 +3,7 @@
 public class BiomeGeneration(int seed, string myEncodedTree2D, string myEncodedTree3D)
 {
     private const float Frequency = (float)0.005;
-
+    
     public float[] GenerateNoise2D(int size, int x, int y)
     {
         var buffer = new float[size * size];
