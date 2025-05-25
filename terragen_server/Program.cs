@@ -18,6 +18,8 @@ internal class Program
     
     private async Task AsyncMain()
     {
+        SrvLog.Console.SetLogLevel(LogTypes.INFO);
+        
         Console.Title = "Terragen Server";
         
         
@@ -67,6 +69,9 @@ internal class Program
         var mapManager = new MapManager();
         
         var userManager = new UserManager(mapManager);
+        
+        
+        
         
         UserModel model = new UserModel()
         {
@@ -131,7 +136,7 @@ internal class Program
         
         
         
-        userManager.UpdatePosition(16, 16, 16, 0, model);
+        userManager.UpdatePosition(18, 14, 20, 0, model);
         
         await Task.Delay(-1, cts.Token);
     }

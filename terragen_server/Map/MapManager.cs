@@ -2,6 +2,7 @@
 using System.Text.Json;
 using terragen_server.DataModels.World;
 using terragen_server.FilesInput;
+using terragen_server.Map.MapGeneration;
 
 namespace terragen_server.Map;
 
@@ -31,20 +32,25 @@ public class MapManager
         SrvLog.Console.Log("MAP_MANAGER", $"Loaded region {regionKey}", SrvLog.LogTypes.DEBUG);
         
         var region = _regions[regionKey];
+
+        var localX = (x < 0) ? (x % Region.GetRegionSize() + Region.GetRegionSize() - 1) : (x % Region.GetRegionSize());
+        var localZ = (z < 0) ? (z % Region.GetRegionSize() + Region.GetRegionSize() - 1) : (z % Region.GetRegionSize());
         
-        var chunkBytes= region.LoadChunk(x % Region.GetRegionSize(), z % Region.GetRegionSize());
+        var localXz = x - regionX * Region.GetRegionSize();
+        var localZz = z - regionZ * Region.GetRegionSize();
+
+        var chunk = region.LoadChunk(localX, localZ);
         
-        if (chunkBytes == null)
+        //var chunk= region.LoadChunk(x, z);
+        //var chunk= region.LoadChunk(x % Region.GetRegionSize(), z % Region.GetRegionSize());
+        
+        if (chunk == null)
         {
             SrvLog.Console.Log("MAP_MANAGER", $"new chunk region {regionKey}. Chunk: {x}, {z}", SrvLog.LogTypes.DEBUG);
             var newChunk = GenerateNewChunk(x, z);
-            region.SaveChunk(x % Region.GetRegionSize(), z % Region.GetRegionSize(), JsonSerializer.SerializeToUtf8Bytes(newChunk));
+            region.SaveChunk(localX, localZ, newChunk);
             return newChunk;
         }
-
-        //TODO: more efficient way to serialize and deserialize chunks
-        
-        var chunk = JsonSerializer.Deserialize<ChunkModel>(chunkBytes);
         
         return chunk;
     }
@@ -92,7 +98,8 @@ public class MapManager
     {
         //TODO: generate new chunk
         //Mine code
-        
+
+        /*
         var chunk = new ChunkModel
         {
             X = x,
@@ -101,8 +108,14 @@ public class MapManager
             ChunkData = new byte[65536]
         };
         RandomNumberGenerator.Fill(chunk.ChunkData);
-        
+
         return chunk;
+        */
+        var terrainGen = new TerrainGen(1337, "GQAHAAENAAQAAAAAACBABwAAZmYmPwAAAAA/", "GQAHAAENAAQAAAAAACBABwAAZmYmPwAAAAA/");
+
+        var chunkData = terrainGen.GenerateChunks(x, z);
+
+        return chunkData;
     }
     
     /// <summary>
@@ -161,15 +174,13 @@ public class MapManager
         {
             var region = _regions[regionKey];
             
-            var chunkBytes= region.LoadChunk(ChunkX % Region.GetRegionSize(), ChunkZ % Region.GetRegionSize());
-            
-            var chunk = JsonSerializer.Deserialize<ChunkModel>(chunkBytes);
+            var chunk= region.LoadChunk(ChunkX % Region.GetRegionSize(), ChunkZ % Region.GetRegionSize());
             
             var BlockOffset = (x * 16 + z) * 4;//TODO: check if this is correct (how to calculate offset)
 
             if (chunk != null) chunk.ChunkData[BlockOffset - 1] = blockId;
             
-            region.SaveChunk(ChunkX % Region.GetRegionSize(), ChunkZ % Region.GetRegionSize(), JsonSerializer.SerializeToUtf8Bytes(chunk));
+            region.SaveChunk(ChunkX % Region.GetRegionSize(), ChunkZ % Region.GetRegionSize(), chunk);
         }
     }
 

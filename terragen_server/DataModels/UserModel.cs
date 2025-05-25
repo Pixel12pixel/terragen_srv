@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System.Net;
+using System.Net.Sockets;
 using terragen_server.DataModels.World;
 
 namespace terragen_server.DataModels;
@@ -51,6 +52,21 @@ public class UserModel
     public async Task SendUdpAsync(byte[] data)
     {
         //TODO: implement UDP send and lock
+        
+        var endpoint = new IPEndPoint(IPAddress.Parse(UdpAddress), int.Parse(UdpPort));
+        var udpClient = new UdpClient();
+        udpClient.Connect(endpoint);
+        lock (_udpLock)
+        {
+            try
+            {
+                udpClient.Send(data, data.Length);
+            }
+            catch (SocketException e)
+            {
+                SrvLog.Console.Log("UDP_Listener", $"Error sending data to client: {e.Message}", SrvLog.LogTypes.WARNING);
+            }
+        }
     }
 
 }
