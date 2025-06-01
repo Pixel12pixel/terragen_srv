@@ -3,15 +3,15 @@ using terragen_server.Netcode.TCP.DataModels;
 
 namespace terragen_server.Netcode;
 
-public class ProtoSerializeTcp()
+public class ProtoSerializeTcp
 {
     private const int ENVELOPE_HEADER_SIZE = 50;
 
     private readonly int PacketSize;
 
-    private readonly Dictionary<string, List<EnvelopeModel>> _incompleteMessages = new();
+    private Dictionary<string, List<EnvelopeModel>> _incompleteMessages = new();
 
-    public ProtoSerializeTcp(int packetSize) : this()
+    public ProtoSerializeTcp(int packetSize)
     {
         PacketSize = packetSize;
     }

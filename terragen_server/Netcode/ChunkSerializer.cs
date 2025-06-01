@@ -9,7 +9,7 @@ public class ChunkSerializer
     {
         if (chunkData.Length != 16 * SectionSize)
         {
-            SrvLog.Console.Log("ChunkSerializer", "Invalid chunk data length. Expected 65536 bytes.", SrvLog.LogTypes.ERROR);
+            SrvLog.Console.Log("Chunk_Serializer", "Invalid chunk data length. Expected 65536 bytes.", SrvLog.LogTypes.ERROR);
             return null;
         }
 

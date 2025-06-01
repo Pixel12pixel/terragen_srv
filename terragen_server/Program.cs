@@ -11,7 +11,7 @@ namespace terragen_server;
 
 internal class Program
 {
-    private readonly string _configPath = "config\\main.json";
+    private readonly string _configPath = "config/main.json";
 
 
     private static void Main() => new Program().AsyncMain().GetAwaiter().GetResult();
@@ -92,6 +92,8 @@ internal class Program
             
             userManager.AddUser(model);
             
+            
+            
             //mapManager.GetChunk(0, 0);
             
             //mapManager.GetChunk(0, -1);
@@ -137,6 +139,8 @@ internal class Program
         
         
         userManager.UpdatePosition(18, 14, 20, 0, model);
+        
+        userManager.RemoveUser(model);
         
         await Task.Delay(-1, cts.Token);
     }
