@@ -3,10 +3,11 @@ using System.Text.Json;
 using terragen_server.DataModels.World;
 using terragen_server.FilesInput;
 using terragen_server.Map.MapGeneration;
+using terragen_server.Netcode;
 
 namespace terragen_server.Map;
 
-public class MapManager
+public class MapManager()
 {
     private Dictionary<string, Region> _regions = new();
 
@@ -36,8 +37,8 @@ public class MapManager
         var localX = (x < 0) ? (x % Region.GetRegionSize() + Region.GetRegionSize() - 1) : (x % Region.GetRegionSize());
         var localZ = (z < 0) ? (z % Region.GetRegionSize() + Region.GetRegionSize() - 1) : (z % Region.GetRegionSize());
         
-        var localXz = x - regionX * Region.GetRegionSize();
-        var localZz = z - regionZ * Region.GetRegionSize();
+        //var localXz = x - regionX * Region.GetRegionSize();
+        //var localZz = z - regionZ * Region.GetRegionSize();
 
         var chunk = region.LoadChunk(localX, localZ);
         

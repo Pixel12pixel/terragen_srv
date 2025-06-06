@@ -5,7 +5,7 @@ public class ChunkSerializer
     
     private const int SectionSize = 16 * 16 * 16; // 4096
 
-    public List<List<(byte value, ushort count)>> CompressChunkRLE(byte[] chunkData)
+    public List<List<(byte value, ushort count)>> CompressChunkRle(byte[] chunkData)
     {
         if (chunkData.Length != 16 * SectionSize)
         {
@@ -19,21 +19,21 @@ public class ChunkSerializer
         {
             var offset = section * SectionSize;
             var sectionData = new Span<byte>(chunkData, offset, SectionSize);
-            var compressed = CompressSectionRLE(sectionData);
+            var compressed = CompressSectionRle(sectionData);
             compressedSections.Add(compressed);
         }
 
         return compressedSections;
     }
 
-    private List<(byte value, ushort count)> CompressSectionRLE(Span<byte> sectionData)
+    private List<(byte value, ushort count)> CompressSectionRle(Span<byte> sectionData)
     {
         var result = new List<(byte value, ushort count)>();
-        int i = 0;
+        var i = 0;
 
         while (i < sectionData.Length)
         {
-            byte current = sectionData[i];
+            var current = sectionData[i];
             ushort count = 1;
 
             while (i + count < sectionData.Length && sectionData[i + count] == current && count < ushort.MaxValue)

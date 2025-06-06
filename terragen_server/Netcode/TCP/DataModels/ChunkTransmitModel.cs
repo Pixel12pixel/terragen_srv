@@ -6,8 +6,8 @@ namespace terragen_server.Netcode.TCP.DataModels;
 public class ChunkTransmitModel
 {
     [ProtoMember(1)]
-    string Id { get; set; } = string.Empty;
+    public string Id { get; set; } = string.Empty;
     
     [ProtoMember(2)]
-    byte[] Data { get; set; }
+    public byte[] Data { get; set; }
 }

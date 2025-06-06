@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using terragen_server.DataModels;
 using terragen_server.Map;
+using terragen_server.Netcode.TCP.DataModels;
 
 namespace terragen_server.Netcode;
 
@@ -13,6 +14,8 @@ public class UserManager(MapManager mapManager)
     private Dictionary<string, int> _loadedRegions = [];
     
     private List<UserModel> _users = [];
+    
+    private ProtoSerializeTcp _serializeTcp = new ProtoSerializeTcp(1024 * 4);
 
     /// <summary>
     /// Gets the list of users.
@@ -173,6 +176,22 @@ public class UserManager(MapManager mapManager)
                 mapManager.GetChunk( int.Parse(t.Split('_')[0]), int.Parse(t.Split('_')[1]));
             }
         }
+
+        foreach (var t in chunksToLoad)
+        {
+            var chunkData = new ChunkTransmitModel
+            {
+                Id = t,
+                Data = mapManager.GetChunk(int.Parse(t.Split('_')[0]), int.Parse(t.Split('_')[1])).ChunkData
+            };
+            var messages = _serializeTcp.Serialize(chunkData, MessageType.CHUNK_TRANSMIT);
+            foreach (var message in messages)
+            {
+                user.SendTcpAsync(message);
+                Task.Delay(50).Wait();
+            }
+        }
+        
         foreach (var t in chunksToUnload)
         {
             if (_loadedChunks.TryGetValue(t, out var count) && --count == 0)

@@ -36,6 +36,8 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
             {
                 var client = await listener.AcceptAsync(); //TODO: add cts
             
+                SrvLog.Console.Log("TCP_Listener", $"New client connected from {client.RemoteEndPoint}", SrvLog.LogTypes.DEBUG);
+                
                 _ = HandleClientAsync(client);
             }
         }
@@ -48,8 +50,6 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
     
     private async Task HandleClientAsync(Socket client)
     {
-        var buffer = new byte[PacketSize];
-        
         var user = await ClientAuthAsync(client);
         
         if (user == null)
@@ -112,6 +112,7 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
                 user.Z = 0;
                 user.RotationX = 0;
                 user.Socket = client;
+                user.Cts = new CancellationTokenSource();
             
                 SrvLog.Console.Log("TCP_Listener", $"Client '{user.Username}' connected from '{client.RemoteEndPoint}'", SrvLog.LogTypes.INFO);
 
@@ -178,9 +179,10 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
             SrvLog.Console.Log("TCP_Listener", $"Error while reading from '{user.Username}': {e.Message}", SrvLog.LogTypes.WARNING);
             await user.Cts.CancelAsync();
             userManager.RemoveUser(user);
+            SrvLog.Console.Log("TCP_Listener", $"Client '{user.Username}' disconnected", SrvLog.LogTypes.INFO);
             user.Socket.Close();
             user.Socket.Dispose();
-            SrvLog.Console.Log("TCP_Listener", $"Client '{user.Username}' disconnected", SrvLog.LogTypes.INFO);
+            
         }
         
     }

@@ -14,4 +14,6 @@ public class LoginModel
     [ProtoMember(3)]
     public string UdpAddress { get; set; }
     
+    [ProtoMember(4)]
+    public int UdpPort { get; set; }
 }

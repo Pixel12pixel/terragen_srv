@@ -30,7 +30,7 @@ public class TerrainGen
     /// </summary>
     /// <param name="readySignal">task completion flag</param>
     /// <param name="cts">cancellation token</param>
-    public async Task SetMinAndMax(TaskCompletionSource readySignal, CancellationTokenSource cts)
+    public async Task SetMinMax(TaskCompletionSource readySignal, CancellationTokenSource cts)
     {
         
         var globalMax = float.NegativeInfinity;

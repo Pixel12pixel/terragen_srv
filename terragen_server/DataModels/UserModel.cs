@@ -34,7 +34,7 @@ public class UserModel
     private object _tcpLock = new();
     private object _udpLock = new();
     
-    private async Task SendTcpAsync(byte[] data)
+    public void SendTcpAsync(byte[] data)
     {
         lock (_tcpLock)
         {
