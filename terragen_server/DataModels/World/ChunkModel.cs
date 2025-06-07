@@ -15,7 +15,7 @@ public class ChunkModel
     public int Z { get; set; }
     
     [ProtoMember(3)]
-    public byte[] ChunkData { get; set; } = new byte[65536];
+    public byte[] ChunkData { get; set; }
     
     [ProtoMember(4)]
     public byte Biome { get; set; }

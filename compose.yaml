@@ -1,0 +1,13 @@
+﻿services:
+  terragen_server:
+    image: terragen_server
+    build:
+      context: ./terragen_server
+      dockerfile: Dockerfile
+    ports:
+      - "7777:7777"
+      - "7778:7778"
+    volumes:
+      - E:/Raider/Docker-Configs/terragen-srv/:/app/data/
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production

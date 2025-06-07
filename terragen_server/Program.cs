@@ -11,14 +11,20 @@ namespace terragen_server;
 
 internal class Program
 {
-    private readonly string _configPath = "config\\main.json";
+    private readonly string _configPath = "config/main.json";
 
 
     private static void Main() => new Program().AsyncMain().GetAwaiter().GetResult();
     
     private async Task AsyncMain()
     {
-        SrvLog.Console.SetLogLevel(LogTypes.INFO);
+        TaskScheduler.UnobservedTaskException += (sender, args) =>
+        {
+            SrvLog.Console.Log("TERRAGEN_SERVER", $"Unobserved exception: {args.Exception}", LogTypes.ERROR);
+            args.SetObserved();
+        };
+        
+        SrvLog.Console.SetLogLevel(LogTypes.DEBUG);
         
         Console.Title = "Terragen Server";
         
@@ -61,50 +67,39 @@ internal class Program
             
             await Task.Delay(5000, cts.Token);
             
+            await cts.CancelAsync();
+            
             Environment.Exit(1);
         }
 
         startNext = new TaskCompletionSource();
 
-        var mapManager = new MapManager();
+        var mapManager = new MapManager(config.Seed);
         
         var userManager = new UserManager(mapManager);
         
         
-        
-        
-        UserModel model = new UserModel()
-        {
-            Username = "a",
-            UdpAddress = "123.123.123.123",
-            UdpPort = "1234",
-            X = 0,
-            Y = 0,
-            Z = 0,
-            RotationX = 0,
-        };
-        
         try
         {
+            mapManager.Init();
+            
             //try to load / generate a chunk
-
             
+            mapManager.GetChunk(0, 0);
             
-            userManager.AddUser(model);
+            mapManager.GetChunk(0, -1);
             
-            //mapManager.GetChunk(0, 0);
+            mapManager.GetChunk(-1, 0);
             
-            //mapManager.GetChunk(0, -1);
-            
-            //mapManager.GetChunk(-1, 0);
-            
-            //mapManager.GetChunk(-1, -1);
+            mapManager.GetChunk(-1, -1);
         }
         catch (Exception e)
         {
             SrvLog.Console.Log("TERRAGEN_SERVER", e.Message, LogTypes.ERROR);
             
             await Task.Delay(5000, cts.Token);
+            
+            await cts.CancelAsync();
             
             Environment.Exit(1);
         }
@@ -123,6 +118,8 @@ internal class Program
             
             await Task.Delay(5000, cts.Token);
             
+            await cts.CancelAsync();
+            
             Environment.Exit(1);
         }
         
@@ -131,12 +128,6 @@ internal class Program
         //Server startup complete
         
         SrvLog.Console.Log("TERRAGEN_SERVER", "Server started successfully", LogTypes.INFO);
-        
-        await Task.Delay(3000, cts.Token);
-        
-        
-        
-        userManager.UpdatePosition(18, 14, 20, 0, model);
         
         await Task.Delay(-1, cts.Token);
     }

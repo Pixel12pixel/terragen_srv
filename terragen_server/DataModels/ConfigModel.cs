@@ -7,4 +7,6 @@ public class ConfigModel
     public int UdpPort { get; set; }
     
     public string ServerName { get; set; } = string.Empty;
+    
+    public int Seed { get; set; }
 }

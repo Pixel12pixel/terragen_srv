@@ -30,10 +30,14 @@ public class Region() : IDisposable
     /// <param name="folder">folder name</param>
     public Region(int regionX, int regionZ, string folder = "regions") : this()
     {
-        Directory.CreateDirectory(folder);
+        var folderPath = "/app/data/";
         
+        folder = Path.Combine(folderPath, folder); //linux
+        
+        Directory.CreateDirectory(folder);
+
         _filePath = Path.Combine(folder, $"region_{regionX}_{regionZ}.lethal"); //TODO: .trg
-        _chunkIndex = new();
+        _chunkIndex = new Dictionary<(int, int), (int offset, int length)>();
 
         if (File.Exists(_filePath))
         {
@@ -88,15 +92,15 @@ public class Region() : IDisposable
     /// <param name="chunk">chunk</param>
     public void SaveChunk(int x, int z, ChunkModel chunk)
     {
-        int index = GetChunkIndex(x, z);
+        var index = GetChunkIndex(x, z);
 
         using var ms = new MemoryStream();
         Serializer.Serialize(ms, chunk);
-        byte[] data = ms.ToArray();
+        var data = ms.ToArray();
 
         using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
         fs.Seek(0, SeekOrigin.End); // dopisz na końcu
-        int offset = (int)fs.Position;
+        var offset = (int)fs.Position;
         fs.Write(data);
 
         // zaktualizuj nagłówek
@@ -104,6 +108,9 @@ public class Region() : IDisposable
         using var bw = new BinaryWriter(fs);
         bw.Write(offset);
         bw.Write(data.Length);
+        
+        fs.Close();
+        bw.Close();
 
         //_chunkIndex[(x, z)] = (offset, data.Length);
         try
@@ -151,11 +158,12 @@ public class Region() : IDisposable
 
         using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Read);
         fs.Seek(entry.offset, SeekOrigin.Begin);
-        byte[] data = new byte[entry.length];
+        var data = new byte[entry.length];
         fs.ReadExactly(data);
 
         using var ms = new MemoryStream(data);
-        return Serializer.Deserialize<ChunkModel>(ms);
+        var a = Serializer.Deserialize<ChunkModel>(ms);
+        return a;
     }
     
     /*

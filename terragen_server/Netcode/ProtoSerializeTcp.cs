@@ -1,19 +1,20 @@
-﻿using ProtoBuf;
+﻿using System.Net;
+using ProtoBuf;
 using terragen_server.Netcode.TCP.DataModels;
 
 namespace terragen_server.Netcode;
 
-public class ProtoSerializeTcp()
+public class ProtoSerializeTcp
 {
-    private const int ENVELOPE_HEADER_SIZE = 50;
+    private const int EnvelopeHeaderSize = 64; // 36 bytes for Id, 4 bytes for PocketId, 4 bytes for PocketsCount, 4 bytes for Type, 4 bytes for message length, rest not used
 
-    private readonly int PacketSize;
+    private readonly int _packetSize;
 
-    private readonly Dictionary<string, List<EnvelopeModel>> _incompleteMessages = new();
+    private Dictionary<string, List<EnvelopeModel>> _incompleteMessages = new();
 
-    public ProtoSerializeTcp(int packetSize) : this()
+    public ProtoSerializeTcp(int packetSize)
     {
-        PacketSize = packetSize;
+        _packetSize = packetSize;
     }
 
     /// <summary>
@@ -33,15 +34,15 @@ public class ProtoSerializeTcp()
 
         var result = new List<byte[]>();
 
-        if (len > PacketSize - ENVELOPE_HEADER_SIZE)
+        if (len > _packetSize - EnvelopeHeaderSize)
         {
-            var packetsCount = (int)Math.Ceiling((double)len / (PacketSize - ENVELOPE_HEADER_SIZE));
+            var packetsCount = (int)Math.Ceiling((double)len / (_packetSize - EnvelopeHeaderSize));
             var id = Guid.NewGuid().ToString();
             var offset = 0;
 
             for (int i = 0; i < packetsCount; i++)
             {
-                var chunkSize = Math.Min(PacketSize - ENVELOPE_HEADER_SIZE, len - offset);
+                var chunkSize = Math.Min(_packetSize - EnvelopeHeaderSize, len - offset);
                 var chunk = new byte[chunkSize];
                 Array.Copy(bytes, offset, chunk, 0, chunkSize);
 
@@ -54,7 +55,14 @@ public class ProtoSerializeTcp()
                     PayLoad = chunk
                 };
 
-                result.Add(SerializeEnvelope(envelope));
+                var serializedEnvelope = SerializeEnvelope(envelope);
+                
+                var data = new byte[serializedEnvelope.Length + 4];
+                Buffer.BlockCopy(serializedEnvelope, 0, data, 4, serializedEnvelope.Length);
+                var lenBytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(serializedEnvelope.Length));
+                Buffer.BlockCopy(lenBytes, 0, data, 0, 4);
+                
+                result.Add(data);
                 offset += chunkSize;
             }
         }
@@ -63,13 +71,20 @@ public class ProtoSerializeTcp()
             var envelope = new EnvelopeModel
             {
                 Id = Guid.NewGuid().ToString(),
-                PocketId = 0,
-                PocketsCount = 0,
+                PocketId = 1,
+                PocketsCount = 1,
                 Type = messageType,
                 PayLoad = bytes
             };
 
-            result.Add(SerializeEnvelope(envelope));
+            var serializedEnvelope = SerializeEnvelope(envelope);
+                
+            var data = new byte[serializedEnvelope.Length + 4];
+            Buffer.BlockCopy(serializedEnvelope, 0, data, 4, serializedEnvelope.Length);
+            var lenBytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(serializedEnvelope.Length));
+            Buffer.BlockCopy(lenBytes, 0, data, 0, 4);
+                
+            result.Add(data);
         }
 
         return result;
@@ -118,11 +133,12 @@ public class ProtoSerializeTcp()
 
         return default;
     }
-    
+
     /// <summary>
-    /// Deserializes a byte array into an object of the specified type.
+    /// Deserializes a byte array into an object of the unspecified type.
     /// </summary>
-    /// <param name="data">raw data</param>
+    /// <param name="rawData">raw data</param>
+    /// <param name="readBytes">bytes count</param>
     /// <returns>object</returns>
     public object? Deserialize(byte[] rawData, int readBytes)
     {

@@ -3,13 +3,31 @@ using System.Text.Json;
 using terragen_server.DataModels.World;
 using terragen_server.FilesInput;
 using terragen_server.Map.MapGeneration;
+using terragen_server.Netcode;
 
 namespace terragen_server.Map;
 
-public class MapManager
+public class MapManager(int seed)
 {
     private Dictionary<string, Region> _regions = new();
 
+    private const string EncodeTree2D = "GQAHAAENAAQAAAAAACBABwAAZmYmPwAAAAA/";
+    private const string EncodeTree3D = "EwCamZk+GgABEQACAAAAAADgQBAAAACIQR8AFgABAAAACwADAAAAAgAAAAMAAAAEAAAAAAAAAD8BFAD//wAAAAAAAD8AAAAAPwAAAAA/AAAAAD8BFwAAAIC/AACAPz0KF0BSuB5AEwAAAKBABgAAj8J1PACamZk+AAAAAAAA4XoUPw==";
+    
+    private TerrainGen? _terrainGen;
+    
+    /// <summary>
+    /// Initializes the MapManager with the given seed.
+    /// </summary>
+    public void Init()
+    {
+        _terrainGen = new TerrainGen(seed, EncodeTree2D, EncodeTree3D);
+
+        _terrainGen.SetMinMax();
+        
+        SrvLog.Console.Log("MAP_MANAGER", "MapManager initialized", SrvLog.LogTypes.INFO);
+    }
+    
     /// <summary>
     /// Gets a chunk from the map. If the chunk does not exist, it generates a new one.
     /// </summary>
@@ -29,15 +47,15 @@ public class MapManager
             SrvLog.Console.Log("MAP_MANAGER", $"Created region {regionKey}", SrvLog.LogTypes.DEBUG);
         }
         
-        SrvLog.Console.Log("MAP_MANAGER", $"Loaded region {regionKey}", SrvLog.LogTypes.DEBUG);
+        
         
         var region = _regions[regionKey];
 
         var localX = (x < 0) ? (x % Region.GetRegionSize() + Region.GetRegionSize() - 1) : (x % Region.GetRegionSize());
         var localZ = (z < 0) ? (z % Region.GetRegionSize() + Region.GetRegionSize() - 1) : (z % Region.GetRegionSize());
         
-        var localXz = x - regionX * Region.GetRegionSize();
-        var localZz = z - regionZ * Region.GetRegionSize();
+        //var localXz = x - regionX * Region.GetRegionSize();
+        //var localZz = z - regionZ * Region.GetRegionSize();
 
         var chunk = region.LoadChunk(localX, localZ);
         
@@ -51,7 +69,7 @@ public class MapManager
             region.SaveChunk(localX, localZ, newChunk);
             return newChunk;
         }
-        
+        SrvLog.Console.Log("MAP_MANAGER", $"Loaded chunk {x} {z}", SrvLog.LogTypes.DEBUG);
         return chunk;
     }
     
@@ -97,23 +115,10 @@ public class MapManager
     private ChunkModel GenerateNewChunk(int x, int z)
     {
         //TODO: generate new chunk
-        //Mine code
 
-        /*
-        var chunk = new ChunkModel
-        {
-            X = x,
-            Z = z,
-            Biome = 0,
-            ChunkData = new byte[65536]
-        };
-        RandomNumberGenerator.Fill(chunk.ChunkData);
+        
 
-        return chunk;
-        */
-        var terrainGen = new TerrainGen(1337, "GQAHAAENAAQAAAAAACBABwAAZmYmPwAAAAA/", "GQAHAAENAAQAAAAAACBABwAAZmYmPwAAAAA/");
-
-        var chunkData = terrainGen.GenerateChunks(x, z);
+        var chunkData = _terrainGen.GenerateChunks(x, z);
 
         return chunkData;
     }
@@ -176,9 +181,9 @@ public class MapManager
             
             var chunk= region.LoadChunk(ChunkX % Region.GetRegionSize(), ChunkZ % Region.GetRegionSize());
             
-            var BlockOffset = (x * 16 + z) * 4;//TODO: check if this is correct (how to calculate offset)
+            var blockOffset = (x * 16 + z) * 4;//TODO: check if this is correct (how to calculate offset)
 
-            if (chunk != null) chunk.ChunkData[BlockOffset - 1] = blockId;
+            if (chunk != null) chunk.ChunkData[blockOffset - 1] = blockId;
             
             region.SaveChunk(ChunkX % Region.GetRegionSize(), ChunkZ % Region.GetRegionSize(), chunk);
         }

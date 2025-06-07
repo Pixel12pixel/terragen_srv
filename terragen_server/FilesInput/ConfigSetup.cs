@@ -13,7 +13,9 @@ public class ConfigSetup
     /// <returns>config model</returns>
     public ConfigModel? Run(TaskCompletionSource ready, string file = "config\\main.json")
     {
-        var path = Path.Combine(Directory.GetCurrentDirectory(), file);
+        //var path = Path.Combine(Directory.GetCurrentDirectory(), file); //windows
+        
+        var path = Path.Combine("/app/data/", file);
         
         if (File.Exists(path))
         {
@@ -84,8 +86,10 @@ public class ConfigSetup
                 {
                     WriteIndented = true
                 });
-                
-                File.WriteAllText(path, json);
+
+                {
+                    File.WriteAllText(path, json);
+                }
                 
                 SrvLog.Console.Log("CONFIG", "Config file not found, creating new one with default values.", SrvLog.LogTypes.INFO);
                 
