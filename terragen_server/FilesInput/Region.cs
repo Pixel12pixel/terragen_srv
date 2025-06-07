@@ -108,6 +108,9 @@ public class Region() : IDisposable
         using var bw = new BinaryWriter(fs);
         bw.Write(offset);
         bw.Write(data.Length);
+        
+        fs.Close();
+        bw.Close();
 
         //_chunkIndex[(x, z)] = (offset, data.Length);
         try
@@ -159,7 +162,8 @@ public class Region() : IDisposable
         fs.ReadExactly(data);
 
         using var ms = new MemoryStream(data);
-        return Serializer.Deserialize<ChunkModel>(ms);
+        var a = Serializer.Deserialize<ChunkModel>(ms);
+        return a;
     }
     
     /*

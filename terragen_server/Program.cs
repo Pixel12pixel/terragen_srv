@@ -74,13 +74,15 @@ internal class Program
 
         startNext = new TaskCompletionSource();
 
-        var mapManager = new MapManager();
+        var mapManager = new MapManager(config.Seed);
         
         var userManager = new UserManager(mapManager);
         
         
         try
         {
+            mapManager.Init();
+            
             //try to load / generate a chunk
             
             mapManager.GetChunk(0, 0);

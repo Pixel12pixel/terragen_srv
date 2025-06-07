@@ -28,24 +28,31 @@ public class TerrainGen
     /// <summary>
     /// Sets the global min and max values for terrain generation.
     /// </summary>
-    /// <param name="readySignal">task completion flag</param>
-    /// <param name="cts">cancellation token</param>
-    public async Task SetMinMax(TaskCompletionSource readySignal, CancellationTokenSource cts)
+    public void SetMinMax()
     {
+        var size = 128;//TODO: 1024
         
         var globalMax = float.NegativeInfinity;
         
-        for (var chunkX = 0; chunkX < 32; ++chunkX)
+        for (var chunkX = 0; chunkX < size; ++chunkX)
         {
-            for (var chunkY = 0; chunkY < 32; ++chunkY)
+            for (var chunkY = 0; chunkY < size; ++chunkY)
             {
-                if (cts.IsCancellationRequested) return;
+                //if (cts.IsCancellationRequested) return;
                 var tempHeightMap = _biomeGeneration.GenerateNoise2D( ChunkSize, chunkX, chunkY);
                 
                 foreach (var value in tempHeightMap)
                 {
                     _globalMin = Math.Min(_globalMin, value);
                     globalMax = Math.Max(globalMax, value);
+                }
+                
+                var iteration = chunkX * size + chunkY;
+                
+                var progress = (float)iteration / (float)(size * size);
+                if (iteration % (size * (Math.DivRem((int)size, (int)(size / 16), out _))) == 0)
+                {
+                    SrvLog.Console.Log("TERRAIN_GEN", $"Generating world: {progress:P2}", SrvLog.LogTypes.INFO);
                 }
             }
         }
@@ -55,7 +62,7 @@ public class TerrainGen
         
         _invRange = (globalMax != _globalMin) ? (1.0f / (globalMax - _globalMin)) : 0.0f;
         
-        readySignal.SetResult();
+        //readySignal.SetResult();
     }
 
     /// <summary>
@@ -67,7 +74,10 @@ public class TerrainGen
     public ChunkModel GenerateChunks(int chunkX, int chunkZ) 
     {
 
-        var chunk = new ChunkModel();
+        var chunk = new ChunkModel
+        {
+            ChunkData = new byte[65536] // 16 * 16 * 256 = 65536 bytes for a chunk
+        };
         var heightMap = _biomeGeneration.GenerateNoise2D( ChunkSize, chunkX, chunkZ);
         var caveMap = _biomeGeneration.GenerateNoise3D( ChunkSize, ChunkHeight, chunkX, chunkZ);
         

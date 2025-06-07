@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using System.Net;
+using ProtoBuf;
 using terragen_server.Netcode.TCP.DataModels;
 
 namespace terragen_server.Netcode;
@@ -58,7 +59,8 @@ public class ProtoSerializeTcp
                 
                 var data = new byte[serializedEnvelope.Length + 4];
                 Buffer.BlockCopy(serializedEnvelope, 0, data, 4, serializedEnvelope.Length);
-                Buffer.BlockCopy(BitConverter.GetBytes(serializedEnvelope.Length), 0, data, 0, 4);
+                var lenBytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(serializedEnvelope.Length));
+                Buffer.BlockCopy(lenBytes, 0, data, 0, 4);
                 
                 result.Add(data);
                 offset += chunkSize;
@@ -79,7 +81,8 @@ public class ProtoSerializeTcp
                 
             var data = new byte[serializedEnvelope.Length + 4];
             Buffer.BlockCopy(serializedEnvelope, 0, data, 4, serializedEnvelope.Length);
-            Buffer.BlockCopy(BitConverter.GetBytes(serializedEnvelope.Length), 0, data, 0, 4);
+            var lenBytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(serializedEnvelope.Length));
+            Buffer.BlockCopy(lenBytes, 0, data, 0, 4);
                 
             result.Add(data);
         }

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using terragen_server.DataModels.World;
+using terragen_server.Netcode;
 
 namespace terragen_server.DataModels;
 
@@ -34,7 +35,7 @@ public class UserModel
     private object _tcpLock = new();
     private object _udpLock = new();
     
-    public void SendTcpAsync(byte[] data)
+    public void SendTcpAsync(byte[] data, UserManager userManager)
     {
         lock (_tcpLock)
         {
@@ -45,6 +46,14 @@ public class UserModel
             catch (SocketException e)
             {
                 SrvLog.Console.Log("TCP_Listener", $"Error sending data to client: {e.Message}", SrvLog.LogTypes.WARNING);
+                this.Cts?.Cancel();
+                this.Socket?.Close();
+                this.Socket?.Dispose();
+                SrvLog.Console.Log("TCP_Listener", $"Client '{this.Username}' disconnected", SrvLog.LogTypes.INFO);
+                userManager.RemoveUser(this);
+                this.Cts?.Dispose();
+                this.ActiveRegions.Clear();
+                this.ActiveChunks.Clear();
             }
         }
     }

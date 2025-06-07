@@ -58,11 +58,10 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
             client.Close();
             return;
         }
-        //TODO: add user to list, user manager
-        
-        userManager.AddUser(user);
         
         SrvLog.Console.Log("TCP_Listener", $"Client '{user.Username}' authenticated from {user.Socket.RemoteEndPoint}", SrvLog.LogTypes.INFO);
+        
+        userManager.AddUser(user);
         
         _ = Task.Run(() => ListenerLoop(user));
     }
@@ -155,6 +154,7 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
                     SrvLog.Console.Log("TCP_Listener", $"Client '{user.Username}' disconnected from {user.Socket.RemoteEndPoint}", SrvLog.LogTypes.INFO);
                     await user.Cts.CancelAsync();
                     userManager.RemoveUser(user);
+                    await user.Socket.DisconnectAsync(false);
                     user.Socket.Close();
                     user.Socket.Dispose();
                 }
@@ -176,7 +176,7 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
         }
         catch (Exception e)
         {
-            SrvLog.Console.Log("TCP_Listener", $"Error while reading from '{user.Username}': {e.Message}", SrvLog.LogTypes.WARNING);
+             SrvLog.Console.Log("TCP_Listener", $"Error while reading from '{user.Username}': {e.Message}", SrvLog.LogTypes.WARNING);
             await user.Cts.CancelAsync();
             userManager.RemoveUser(user);
             SrvLog.Console.Log("TCP_Listener", $"Client '{user.Username}' disconnected", SrvLog.LogTypes.INFO);

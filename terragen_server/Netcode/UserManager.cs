@@ -7,7 +7,7 @@ namespace terragen_server.Netcode;
 
 public class UserManager(MapManager mapManager)
 {
-    private const int RenderDistance = 16;
+    private const int RenderDistance = 8;
     
     private Dictionary<string, int> _loadedChunks = [];
     
@@ -179,6 +179,8 @@ public class UserManager(MapManager mapManager)
 
         foreach (var t in chunksToLoad)
         {
+            if(user.Cts.IsCancellationRequested)
+                break;
             var chunkData = new ChunkTransmitModel
             {
                 Id = t,
@@ -187,7 +189,9 @@ public class UserManager(MapManager mapManager)
             var messages = _serializeTcp.Serialize(chunkData, MessageType.CHUNK_TRANSMIT);
             foreach (var message in messages)
             {
-                user.SendTcpAsync(message);
+                if(user.Cts.IsCancellationRequested)
+                    break;
+                user.SendTcpAsync(message, this);
                 Task.Delay(50).Wait();
             }
         }
