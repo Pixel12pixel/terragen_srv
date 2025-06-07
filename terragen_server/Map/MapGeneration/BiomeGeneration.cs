@@ -19,6 +19,18 @@ public class BiomeGeneration(int seed, string myEncodedTree2D, string myEncodedT
         fn.GenUniformGrid2D(buffer, x*size, z*size, size, size, Frequency, seed);
         return buffer;
     }
+    
+    public float[] GenerateNoise2DForTrees(int size, int x, int z)
+    {
+        var buffer = new float[size * size];
+        string myEncodedTree2DTree = "HgANAAMAAAAAAABAHgALAAEAAAAAAAAAAQAAAAAAAAABBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAETAFK4nj8IAAAAAAA/AAAAAAABEwBxPQpACAA=";
+        const float TreesFrequency = 0.05f;
+        
+        var fn = FastNoise2.FromEncodedNodeTree(myEncodedTree2DTree);
+        
+        fn.GenUniformGrid2D(buffer, x*size, z*size, size, size, TreesFrequency, seed);
+        return buffer;
+    }
 
     /// <summary>
     /// generates a 3D noise map based on the provided size, height, and coordinates.
