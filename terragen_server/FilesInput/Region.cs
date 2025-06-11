@@ -32,7 +32,7 @@ public class Region() : IDisposable
     {
         var folderPath = "/app/data/";
         
-        folder = Path.Combine(folderPath, folder); //linux
+        //folder = Path.Combine(folderPath, folder); //linux
         
         Directory.CreateDirectory(folder);
 

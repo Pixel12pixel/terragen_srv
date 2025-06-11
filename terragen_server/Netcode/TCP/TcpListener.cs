@@ -8,7 +8,7 @@ namespace terragen_server.Netcode.TCP;
 
 public class TcpListener(int port, int udpPort, MapManager mapManager, UserManager userManager)
 {
-    private const int PacketSize = 1024 * 4;
+    private const int PacketSize = 1024 * 16;
     
     private const int Version = 1;
     

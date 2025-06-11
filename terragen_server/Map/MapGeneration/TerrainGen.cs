@@ -24,6 +24,7 @@ public class TerrainGen
     {
         _biomeGeneration = new BiomeGeneration(seed , myEncodedTree2D, myEncodedTree3D);
         _caveDensity = caveDensity;
+        _treesDensity = treesDensity;
     }
 
     /// <summary>
@@ -76,7 +77,7 @@ public class TerrainGen
     {
         var rnd = new Random();
         float min = 0.0f, max = 8.0f;
-        float valueInRange = rnd.NextSingle() * (max - min) + min;
+        
         
         var chunk = new ChunkModel
         {
@@ -94,7 +95,7 @@ public class TerrainGen
                 var normalized = (v - _globalMin) * _invRange;
 
                 var h = (int)(normalized * (ChunkHeight - 1));
-                h = Math.Clamp(h, 0, ChunkHeight - 1) - 100;
+                h = Math.Clamp(h, 0, ChunkHeight - 1);
 
                 for (var y = 0; y < ChunkHeight; ++y)
                 {
@@ -108,12 +109,14 @@ public class TerrainGen
                     }
                     else if(chunk.ChunkData[index]!=(byte)BlockType.LEAVES) chunk.ChunkData[index] = (byte)BlockType.AIR;
                 }
+
+                var valueInRange = rnd.NextSingle() * (max - min) + min;
                 
-                var tree = treesMap[z * ChunkSize + x]*valueInRange;
+                var tree = treesMap[z * ChunkSize + x] * valueInRange;
                 
                 if (tree >= _treesDensity||x < 2 || x > 13 || z < 2 || z > 13) continue;
 
-                if (h < 0 || h > 100 || caveMap[(h * ChunkSize + z) * ChunkSize + x]<0.0f) continue;
+                if (h < 0 || h > 256 || caveMap[(h * ChunkSize + z) * ChunkSize + x]>0.0f) continue;
 
                 /*generowanie pnia*/
                 for (int dy = 1; dy <= 4; ++dy) {

@@ -7,7 +7,7 @@ namespace terragen_server.Netcode;
 
 public class UserManager(MapManager mapManager)
 {
-    private const int RenderDistance = 8;
+    private const int RenderDistance = 16;
     
     private Dictionary<string, int> _loadedChunks = [];
     
@@ -15,7 +15,7 @@ public class UserManager(MapManager mapManager)
     
     private List<UserModel> _users = [];
     
-    private ProtoSerializeTcp _serializeTcp = new ProtoSerializeTcp(1024 * 4);
+    private ProtoSerializeTcp _serializeTcp = new ProtoSerializeTcp(1024 * 16);
 
     /// <summary>
     /// Gets the list of users.
@@ -192,7 +192,7 @@ public class UserManager(MapManager mapManager)
                 if(user.Cts.IsCancellationRequested)
                     break;
                 user.SendTcpAsync(message, this);
-                Task.Delay(50).Wait();
+                //Task.Delay(5).Wait();
             }
         }
         
