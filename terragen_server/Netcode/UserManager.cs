@@ -1,7 +1,9 @@
-﻿using System.Net;
+﻿
+using System.Net;
 using terragen_server.DataModels;
 using terragen_server.Map;
 using terragen_server.Netcode.TCP.DataModels;
+using terragen_server.Netcode.UDP.DataModels;
 
 namespace terragen_server.Netcode;
 
@@ -70,9 +72,6 @@ public class UserManager(MapManager mapManager)
         {
             _users[index] = user;
         }
-        
-        //TODO: coordinates and chunk load
-        
     }
 
     /// <summary>
@@ -83,7 +82,7 @@ public class UserManager(MapManager mapManager)
     /// <param name="z">Z coordinate</param>
     /// <param name="rot">X-axis rotation</param>
     /// <param name="user">User model</param>
-    public void UpdatePosition(int x, int y, int z, float rot, UserModel user)
+    public void UpdatePosition(float x, float y, float z, float rot, UserModel user)
     {
         var index = _users.IndexOf(user);
         if (index != -1)
@@ -94,8 +93,30 @@ public class UserManager(MapManager mapManager)
             _users[index].RotationX = rot;
         }
 
-        var userChunkX = Math.DivRem(x, 16, out _) - (x < 0 ? 1 : 0);
-        var userChunkZ = Math.DivRem(z, 16, out _) - (z < 0 ? 1 : 0);
+        foreach (var client in _users)
+        {
+            if (client == user)
+                continue;
+
+            var positionUpdateBroadcast = new PositionUpdateBroadcastModel()
+            {
+                PlayerName = user.Username,
+                X = x,
+                Y = y,
+                Z = z,
+                RotationX = rot
+            };
+
+            var messages = _serializeTcp.Serialize(positionUpdateBroadcast, MessageType.POSITION_UPDATE_BROADCAST);
+
+            foreach (var message in messages)
+            {
+                client.SendTcpAsync(message, this);
+            }
+        }
+
+        var userChunkX = Math.DivRem((int)x, 16, out _) - (x < 0 ? 1 : 0);
+        var userChunkZ = Math.DivRem((int)z, 16, out _) - (z < 0 ? 1 : 0);
 
         var chunkMinX = userChunkX - RenderDistance;
         var chunkMaxX = userChunkX + RenderDistance;
@@ -192,7 +213,6 @@ public class UserManager(MapManager mapManager)
                 if(user.Cts.IsCancellationRequested)
                     break;
                 user.SendTcpAsync(message, this);
-                //Task.Delay(5).Wait();
             }
         }
         
@@ -226,6 +246,39 @@ public class UserManager(MapManager mapManager)
         catch (Exception e)
         {
             return null;
+        }
+    }
+    
+    /// <summary>
+    /// Sends an updated chunk to a users if the chunk is loaded.
+    /// </summary>
+    /// <param name="user">User model</param>
+    /// <param name="chunkX">chunk X position</param>
+    /// <param name="chunkZ">chunk Z position</param>
+    public void SendUpdatedChunk(UserModel user, int chunkX, int chunkZ)
+    {
+        var chunkKey = $"{chunkX}_{chunkZ}";
+        
+        if (_loadedChunks.TryGetValue(chunkKey, out var count) && count > 0)
+        {
+            var chunkData = mapManager.GetChunk(chunkX, chunkZ);
+            {
+                var chunkTransmitModel = new ChunkTransmitModel
+                {
+                    Id = chunkKey,
+                    Data = chunkData.ChunkData
+                };
+                
+                var messages = _serializeTcp.Serialize(chunkTransmitModel, MessageType.BLOCK_UPDATE_BROADCAST);
+
+                foreach (var client in _users)
+                {
+                    foreach (var message in messages)
+                    {
+                        client.SendTcpAsync(message, this);
+                    }
+                }
+            }
         }
     }
 }

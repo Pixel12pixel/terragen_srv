@@ -36,7 +36,7 @@ public class Region() : IDisposable
         
         Directory.CreateDirectory(folder);
 
-        _filePath = Path.Combine(folder, $"region_{regionX}_{regionZ}.lethal"); //TODO: .trg
+        _filePath = Path.Combine(folder, $"region_{regionX}_{regionZ}.trg");
         _chunkIndex = new Dictionary<(int, int), (int offset, int length)>();
 
         if (File.Exists(_filePath))

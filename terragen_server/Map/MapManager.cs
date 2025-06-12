@@ -114,13 +114,10 @@ public class MapManager(int seed)
     /// <returns>Chunk model data</returns>
     private ChunkModel GenerateNewChunk(int x, int z)
     {
-        //TODO: generate new chunk
+        var chunkData = _terrainGen?.GenerateChunks(x, z);
 
-        
-
-        var chunkData = _terrainGen.GenerateChunks(x, z);
-
-        return chunkData;
+        // ReSharper disable once NullableWarningSuppressionIsUsed
+        return chunkData!;
     }
     
     /// <summary>
@@ -181,12 +178,11 @@ public class MapManager(int seed)
             
             var chunk= region.LoadChunk(ChunkX % Region.GetRegionSize(), ChunkZ % Region.GetRegionSize());
             
-            var blockOffset = (x * 16 + z) * 4;//TODO: check if this is correct (how to calculate offset)
+            var blockOffset = (y * 16 + x) * 16 + z;
 
             if (chunk != null) chunk.ChunkData[blockOffset - 1] = blockId;
             
             region.SaveChunk(ChunkX % Region.GetRegionSize(), ChunkZ % Region.GetRegionSize(), chunk);
         }
     }
-
 }

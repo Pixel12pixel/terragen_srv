@@ -1,8 +1,12 @@
-﻿using System.Net;
+﻿
+
+
+using System.Net;
 using System.Net.Sockets;
 using terragen_server.DataModels;
 using terragen_server.Map;
 using terragen_server.Netcode.TCP.DataModels;
+using terragen_server.Netcode.UDP.DataModels;
 
 namespace terragen_server.Netcode.TCP;
 
@@ -34,7 +38,7 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
         
             while (!cts.IsCancellationRequested)
             {
-                var client = await listener.AcceptAsync(); //TODO: add cts
+                var client = await listener.AcceptAsync();
             
                 SrvLog.Console.Log("TCP_Listener", $"New client connected from {client.RemoteEndPoint}", SrvLog.LogTypes.DEBUG);
                 
@@ -142,12 +146,12 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
             {
                 Array.Clear(buffer, 0, buffer.Length);
                 
-                var readBytes = await user.Socket.ReceiveAsync(buffer, SocketFlags.None); //TODO: add cts
+                var readBytes = await user.Socket.ReceiveAsync(buffer, SocketFlags.None);
             
                 var message = _protoSerializeTcp.Deserialize(buffer, readBytes);
 
                 if (message is null) 
-                    continue; //fragmented message, not all packets received yet
+                    continue;
 
                 if (message is DisconnectModel disconnectModel)
                 {
@@ -161,6 +165,11 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
                 else if (message is BlockUpdateModel blockUpdateModel)
                 {
                     mapManager.UpdateChunk(blockUpdateModel.chunkX, blockUpdateModel.chunkZ, blockUpdateModel.blockX, blockUpdateModel.blockY, blockUpdateModel.blockZ, blockUpdateModel.blockId);
+                    userManager.SendUpdatedChunk(user, blockUpdateModel.chunkX, blockUpdateModel.chunkZ);
+                }
+                else if (message is PositionUpdateModel positionUpdateModel)
+                {
+                    userManager.UpdatePosition(positionUpdateModel.X, positionUpdateModel.Y, positionUpdateModel.Z, positionUpdateModel.RotationX, user);
                 }
                 else if (message is ChatMessageModel chatMessageModel)
                 {

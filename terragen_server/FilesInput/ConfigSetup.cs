@@ -118,32 +118,8 @@ public class ConfigSetup
         {
             TcpPort = 7777,
             UdpPort = 7778,
-            ServerName = "Terragen Server"
+            ServerName = "Terragen Server",
+            Seed = 1234
         };
-    }
-    
-    /// <summary>
-    /// [Not Used] Check if directories exist and create them if they don't.
-    /// </summary>
-    public void CheckDirectories()
-    {
-        //TODO: check if directories exist and create them if they don't
-        var directories = new List<string>
-        {
-            "config",
-            "logs",
-            "worlds"
-        };
-
-        foreach (var directory in directories)
-        {
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, directory);
-            
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-                SrvLog.Console.Log("CONFIG", $"Directory '{directory}' created.", SrvLog.LogTypes.INFO);
-            }
-        }
     }
 }

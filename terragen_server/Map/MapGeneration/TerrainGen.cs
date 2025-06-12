@@ -32,7 +32,7 @@ public class TerrainGen
     /// </summary>
     public void SetMinMax()
     {
-        var size = 128;//TODO: 1024
+        var size = 1024;
         
         var globalMax = float.NegativeInfinity;
         
