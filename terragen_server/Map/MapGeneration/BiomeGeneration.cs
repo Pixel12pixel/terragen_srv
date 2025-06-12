@@ -20,6 +20,15 @@ public class BiomeGeneration(int seed, string myEncodedTree2D, string myEncodedT
         return buffer;
     }
     
+    public float[] GenerateNoise2D(int size, int x, int z, float frequency, string myEncodedTree)
+    {
+        var buffer = new float[size * size];
+        var fn = FastNoise2.FromEncodedNodeTree(myEncodedTree);
+        
+        fn.GenUniformGrid2D(buffer, x*size, z*size, size, size, frequency, seed);
+        return buffer;
+    }
+    
     public float[] GenerateNoise2DForTrees(int size, int x, int z)
     {
         var buffer = new float[size * size];
