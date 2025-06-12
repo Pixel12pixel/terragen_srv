@@ -24,6 +24,7 @@ public class TerrainGen
     {
         _biomeGeneration = new BiomeGeneration(seed , myEncodedTree2D, myEncodedTree3D);
         _caveDensity = caveDensity;
+        _treesDensity = treesDensity;
     }
 
     /// <summary>
@@ -94,15 +95,18 @@ public class TerrainGen
                 var normalized = (v - _globalMin) * _invRange;
 
                 var h = (int)(normalized * (ChunkHeight - 1));
-                h = Math.Clamp(h, 0, ChunkHeight - 1) - 100;
+                h = Math.Clamp(h, 0, ChunkHeight - 1);
 
                 for (var y = 0; y < ChunkHeight; ++y)
                 {
                     var index = (y * ChunkSize + z) * ChunkSize + x;
-
-                    if (((y <= h) && (caveMap[index] < 0.0f)) || y == 0)
+                    
+                    if(y==0) chunk.ChunkData[index] = (byte)BlockType.BEDROCK;
+                    else if ((y <= h) && (caveMap[index] < 0.0f))
                     {
-                        if (y<=h-5) chunk.ChunkData[index] = (byte)BlockType.STONE;
+                        if(y>200&&y<=230) chunk.ChunkData[index] = (byte)BlockType.STONE;
+                        else if(y>230) chunk.ChunkData[index] = (byte)BlockType.SNOW;
+                        else if (y<=h-5) chunk.ChunkData[index] = (byte)BlockType.STONE;
                         else if (y<=h-1) chunk.ChunkData[index] = (byte)BlockType.DIRT;
                         else chunk.ChunkData[index] = (byte)BlockType.GRASS;
                     }
@@ -161,5 +165,7 @@ public enum BlockType : byte
     DIRT =2,
     STONE =3,
     WOOD =4,
-    LEAVES =5
+    LEAVES =5,
+    BEDROCK =6,
+    SNOW =7
 }
