@@ -227,6 +227,8 @@ public class UserManager(MapManager mapManager)
                 _loadedChunks[t] = count;
             }
         }
+        
+        user.ActiveChunks = newChunks;
     }
     
     /// <summary>
