@@ -1,25 +1,4 @@
-﻿/******************************************************************************
- * File        : Program.cs
- * Project     : terragen_server
- * Author      : Dorian Koehler
- * Created on  : 05.05.2025
- *
- * Description:
- * Main entry point for the Terragen server application.
- *
- * Language: c#
- * Project version: Dev
- *
- * Comments:
- * This file contains the main program logic for starting the Terragen server.
- * 
- *
- * License:
- * Internal use
- *
- *****************************************************************************/
-
-using System.Reflection;
+﻿using System.Reflection;
 using SrvLog;
 using terragen_server.DataModels;
 using terragen_server.FilesInput;

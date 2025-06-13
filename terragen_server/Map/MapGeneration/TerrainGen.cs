@@ -100,7 +100,7 @@ public class TerrainGen
     {
         var rnd = new Random();
         float min = 0.0f, max = 8.0f;
-        var valueInRange = rnd.NextSingle() * (max - min) + min;
+        
         
         var chunk = new ChunkModel
         {
@@ -136,23 +136,23 @@ public class TerrainGen
                 {
                     var index = (y * ChunkSize + z) * ChunkSize + x;
                     
-                    if(y==0) chunk.ChunkData[index] = (byte)BlockType.BEDROCK;
+                    if(y==0) chunk.ChunkData[index] = (byte)BlockType.STONE; //bedrock
                     else if ((y <= h) && (caveMap[index] < _caveDensity))
                     {
                         if(y>200&&y<=230) chunk.ChunkData[index] = (byte)BlockType.STONE;
-                        else if(y>230) chunk.ChunkData[index] = (byte)BlockType.SNOW;
+                        else if(y>230) chunk.ChunkData[index] = (byte)BlockType.STONE; //snow
                         else if (y<=h-5) chunk.ChunkData[index] = (byte)BlockType.STONE;
                         else if (y<=h-1) chunk.ChunkData[index] = (byte)BlockType.DIRT;
                         else chunk.ChunkData[index] = (byte)BlockType.GRASS;
                     }
                     else if(chunk.ChunkData[index]!=(byte)BlockType.LEAVES) chunk.ChunkData[index] = (byte)BlockType.AIR;
                 }
-                
+                var valueInRange = rnd.NextSingle() * (max - min) + min;
                 var tree = treesMap[z * ChunkSize + x]*valueInRange;
                 
                 if (tree >= _treesDensity||x < 2 || x > 13 || z < 2 || z > 13) continue;
 
-                if (h < 0 || h > 100 || caveMap[(h * ChunkSize + z) * ChunkSize + x]<_caveDensity) continue;
+                if (h < 0 || h >= 200 || caveMap[(h * ChunkSize + z) * ChunkSize + x]>=_caveDensity) continue;
 
                 /*generowanie pnia*/
                 for (int dy = 1; dy <= 4; ++dy) {
