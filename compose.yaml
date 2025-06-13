@@ -8,6 +8,6 @@
       - "7777:7777"
       - "7778:7778"
     volumes:
-      - E:/Raider/Docker-Configs/terragen-srv/:/app/data/
+      - [Local Path]:/app/data/
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

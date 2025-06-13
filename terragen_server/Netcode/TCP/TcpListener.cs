@@ -52,6 +52,10 @@ public class TcpListener(int port, int udpPort, MapManager mapManager, UserManag
         }
     }
     
+    /// <summary>
+    /// Handles the client connection.
+    /// </summary>
+    /// <param name="client">client socket</param>
     private async Task HandleClientAsync(Socket client)
     {
         var user = await ClientAuthAsync(client);

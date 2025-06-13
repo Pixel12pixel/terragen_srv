@@ -99,11 +99,10 @@ public class Region() : IDisposable
         var data = ms.ToArray();
 
         using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-        fs.Seek(0, SeekOrigin.End); // dopisz na końcu
+        fs.Seek(0, SeekOrigin.End); 
         var offset = (int)fs.Position;
         fs.Write(data);
-
-        // zaktualizuj nagłówek
+        
         fs.Seek(index * HeaderEntrySize, SeekOrigin.Begin);
         using var bw = new BinaryWriter(fs);
         bw.Write(offset);
@@ -111,8 +110,7 @@ public class Region() : IDisposable
         
         fs.Close();
         bw.Close();
-
-        //_chunkIndex[(x, z)] = (offset, data.Length);
+        
         try
         {
             _chunkIndex.Add((x, z), (offset, data.Length));
@@ -123,27 +121,6 @@ public class Region() : IDisposable
         }
         
     }
-    
-    /*
-    public void SaveChunk(int x, int z, byte[] data)
-    {
-        var index = GetChunkIndex(x, z);
-        var offset = HeaderSize + index * data.Length;
-        
-        using var fs = new FileStream(_filePath, FileMode.Open);
-        using var bw = new BinaryWriter(fs);
-        
-        fs.Seek(index * HeaderEntrySize, SeekOrigin.Begin);
-        bw.Write(offset);
-        bw.Write(data.Length);
-        
-        fs.Seek(offset, SeekOrigin.Begin);
-        bw.Write(data);
-        
-        _chunkIndex[(x, z)] = (offset, data.Length);
-    }
-    */
-    
     
     /// <summary>
     /// Loads a chunk from the region file.
@@ -165,26 +142,6 @@ public class Region() : IDisposable
         var a = Serializer.Deserialize<ChunkModel>(ms);
         return a;
     }
-    
-    /*
-    public byte[]? LoadChunk(int x, int z)
-    {
-        var index = GetChunkIndex(x, z);
-        
-        if (_chunkIndex.TryGetValue((x, z), out var entry))
-        {
-            using var fs = new FileStream(_filePath, FileMode.Open);
-            using var br = new BinaryReader(fs);
-            
-            fs.Seek(entry.offset, SeekOrigin.Begin);
-            return br.ReadBytes(entry.length);
-        }
-
-        return null;
-    }
-    */
-    
-    
     
     /// <summary>
     /// Disposes the region object and clears the chunk index.

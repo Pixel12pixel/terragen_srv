@@ -60,19 +60,6 @@ public class UserManager(MapManager mapManager)
             }
         }
     }
-    
-    /// <summary>
-    /// [Not Used] Force update a user in the list.
-    /// </summary>
-    /// <param name="user"></param>
-    public void ForceUpdate(UserModel user)
-    {
-        var index = _users.IndexOf(user);
-        if (index != -1)
-        {
-            _users[index] = user;
-        }
-    }
 
     /// <summary>
     /// Update the user's position and load/unload regions based on their new position.

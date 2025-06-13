@@ -107,7 +107,7 @@ public class MapManager(int seed)
     }
 
     /// <summary>
-    /// [PLACEHOLDER] Generates a new chunk
+    /// Generates a new chunk
     /// </summary>
     /// <param name="x">X coordinate</param>
     /// <param name="z">Z coordinate</param>
@@ -147,13 +147,6 @@ public class MapManager(int seed)
             _regions.Remove(regionKey);
             SrvLog.Console.Log("MAP_MANAGER", $"Removed region {regionKey}", SrvLog.LogTypes.DEBUG);
         }
-    }
-
-    /// <summary>
-    /// [Not Used] Force update a region in the map. If the region does not exist, it creates a new one.
-    /// </summary>
-    public void ForceUpdateRegion()
-    {
     }
 
     /// <summary>
