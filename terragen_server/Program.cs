@@ -24,7 +24,7 @@ internal class Program
             args.SetObserved();
         };
         
-        SrvLog.Console.SetLogLevel(LogTypes.DEBUG);
+        SrvLog.Console.SetLogLevel(LogTypes.INFO);
         
         Console.Title = "Terragen Server";
         

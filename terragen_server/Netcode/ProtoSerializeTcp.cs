@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using ProtoBuf;
 using terragen_server.Netcode.TCP.DataModels;
+using terragen_server.Netcode.UDP.DataModels;
 
 namespace terragen_server.Netcode;
 
@@ -191,6 +192,7 @@ public class ProtoSerializeTcp
             MessageType.DISCONNECT => Serializer.Deserialize<DisconnectModel>(stream),
             MessageType.CHAT => Serializer.Deserialize<ChatMessageModel>(stream),
             MessageType.BLOCK_UPDATE => Serializer.Deserialize<BlockUpdateModel>(stream),
+            MessageType.POSITION_UPDATE => Serializer.Deserialize<PositionUpdateModel>(stream),
             _ => null
         };
     }
@@ -206,96 +208,4 @@ public class ProtoSerializeTcp
         Serializer.Serialize(stream, envelope);
         return stream.ToArray();
     }
-    
-    /*
-    private const int ENVELOPE_HEADER_SIZE = 50;
-    
-    public List<byte[]> Serialize<T>(T obj, MessageType messageType)
-    {
-        using var stream = new MemoryStream();
-        
-        Serializer.Serialize(stream, obj);
-        
-        var bytes = stream.ToArray();
-        
-        var len = bytes.Length;
-
-        var result = new List<byte[]>();
-        
-        
-        
-        if (len > PacketSize - ENVELOPE_HEADER_SIZE)
-        {
-            var packetsCount = (int)Math.Ceiling((double)len / PacketSize);
-            var id = Guid.NewGuid().ToString();
-            var offset = 0;
-            for (var i = 0; i < packetsCount; i++)
-            {
-                var packetSize = Math.Min(PacketSize - ENVELOPE_HEADER_SIZE, len - offset);
-                var packetBytes = new byte[packetSize];
-                Array.Copy(bytes, offset, packetBytes, 0, packetSize);
-                
-                var serializedEnvelope = SerializeEnvelope(new EnvelopeModel()
-                {
-                    Id = id,
-                    PocketId = i,
-                    PocketsCount = packetsCount,
-                    Type = messageType,
-                    PayLoad = packetBytes
-                });
-                
-                result.Add(serializedEnvelope);
-                
-                offset += packetSize;
-            }
-        }
-        else
-        {
-            var serializedEnvelope = SerializeEnvelope(new EnvelopeModel()
-            {
-                Id = Guid.NewGuid().ToString(),
-                PocketId = 0,
-                PocketsCount = 0,
-                Type = messageType,
-                PayLoad = bytes
-            });
-            
-            result.Add(serializedEnvelope);
-        }
-        
-        return result;
-    }
-
-    private byte[] SerializeEnvelope(EnvelopeModel envelope)
-    {
-        using var stream = new MemoryStream();
-        
-        Serializer.Serialize(stream, envelope);
-        
-        return stream.ToArray();
-    }
-
-    
-    public T Deserialize<T>(byte[] data, int dataSize = 0)
-    {
-        using var stream = new MemoryStream(data);
-        
-        var envelope = Serializer.Deserialize<EnvelopeModel>(stream);
-        
-        var bytes = new byte[envelope.PayLoad.Length];
-        Array.Copy(envelope.PayLoad, bytes, envelope.PayLoad.Length);
-        
-        return DeserializePayload<T>(bytes);
-    }
-    
-    
-    public T DeserializePayload<T>(byte[] data)
-    {
-        var len = BitConverter.ToUInt16(data, 0);
-        var bytes = new byte[len];
-        Array.Copy(data, 2, bytes, 0, len);
-        using var stream = new MemoryStream(bytes);
-        return Serializer.Deserialize<T>(stream);
-    }
-    */
 }

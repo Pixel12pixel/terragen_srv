@@ -12,6 +12,23 @@ public class TerrainGen
     private float _globalMin = float.PositiveInfinity;
     private readonly float _caveDensity;
     private readonly float _treesDensity;
+    private float heightMountainMin = float.PositiveInfinity;
+    private float heightMountainInvRange;
+    private float heightForestMin = float.PositiveInfinity;
+    private float heightForestInvRange;
+    private float heightDesertMin = float.PositiveInfinity;
+    private float heightDesertInvRange;
+    private float tempMin = float.PositiveInfinity;
+    private float heightTempInvRange;
+    private float humidMin = float.PositiveInfinity;
+    private float heightHumidInvRange;
+    private Vector2 Forest   { get; } = new Vector2(0.5f, 0.8f);
+    private Vector2 Mountains{ get; } = new Vector2(0.3f, 0.4f);
+    private Vector2 Desert   { get; } = new Vector2(0.9f, 0.1f);
+    private float wM;
+    private float wF;
+    private float wD;
+
 
     /// <summary>
     /// TerrainGen constructor
@@ -25,6 +42,12 @@ public class TerrainGen
         _biomeGeneration = new BiomeGeneration(seed , myEncodedTree2D, myEncodedTree3D);
         _caveDensity = caveDensity;
         _treesDensity = treesDensity;
+        
+        SetGlobalMinMax(ref humidMin,ref heightHumidInvRange, 0.002f, "EwAfhes/BwA=");
+        SetGlobalMinMax(ref tempMin, ref heightTempInvRange, 0.0015f, "DQAEAAAAAAAAQAcAAAAAAD8AAAAAAA==");
+        SetGlobalMinMax(ref heightMountainMin, ref heightMountainInvRange, 0.005f, myEncodedTree2D);
+        SetGlobalMinMax(ref heightForestMin, ref heightForestInvRange, 0.01f, "GQANAAIAAAAAAABAEwDNzMw+CAAAAAAAPwAAAAAAARkABAAAAAAAAABAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAETAOxROD4HAA==");
+        SetGlobalMinMax(ref heightDesertMin, ref heightDesertInvRange, 0.01f, "GQANAAIAAAAAAABAEwCuR+E+BwAAAAAAPwAAAAAAARkABAAAAAAAAABAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAETAOxROD4HAA==");
     }
 
     /// <summary>
@@ -32,7 +55,7 @@ public class TerrainGen
     /// </summary>
     public void SetMinMax()
     {
-        var size = 128;//TODO: 1024
+        var size = 1024;
         
         var globalMax = float.NegativeInfinity;
         
@@ -77,47 +100,59 @@ public class TerrainGen
     {
         var rnd = new Random();
         float min = 0.0f, max = 8.0f;
-        float valueInRange = rnd.NextSingle() * (max - min) + min;
+        
         
         var chunk = new ChunkModel
         {
             ChunkData = new byte[65536] // 16 * 16 * 256 = 65536 bytes for a chunk
         };
-        var heightMap = _biomeGeneration.GenerateNoise2D( ChunkSize, chunkX, chunkZ);
+        var heightMapMountain = _biomeGeneration.GenerateNoise2D( ChunkSize, chunkX, chunkZ);
         var treesMap = _biomeGeneration.GenerateNoise2DForTrees( ChunkSize, chunkX, chunkZ);
         var caveMap = _biomeGeneration.GenerateNoise3D( ChunkSize, ChunkHeight, chunkX, chunkZ);
+        var heightMapForest = _biomeGeneration.GenerateNoise2D( ChunkSize, chunkX, chunkZ,  0.01f, "GQANAAIAAAAAAABAEwDNzMw+CAAAAAAAPwAAAAAAARkABAAAAAAAAABAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAETAOxROD4HAA==");
+        var heightMapDesert = _biomeGeneration.GenerateNoise2D( ChunkSize, chunkX, chunkZ, 0.01f, "GQANAAIAAAAAAABAEwCuR+E+BwAAAAAAPwAAAAAAARkABAAAAAAAAABAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAETAOxROD4HAA==");
+        var tempMap = _biomeGeneration.GenerateNoise2D( ChunkSize, chunkX, chunkZ, 0.0015f, "DQAEAAAAAAAAQAcAAAAAAD8AAAAAAA==");
+        var humidMap = _biomeGeneration.GenerateNoise2D( ChunkSize, chunkX, chunkZ, 0.002f, "EwAfhes/BwA=");
         
         for (var x = 0; x < ChunkSize; ++x)
         {
             for (var z = 0; z < ChunkSize; ++z)
             {
-                var v = heightMap[z * ChunkSize + x];
-                var normalized = (v - _globalMin) * _invRange;
+                var temp  = GetNormalizeValue(ref tempMap [z * ChunkSize + x],ref tempMin,ref heightTempInvRange);
+                var humid = GetNormalizeValue(ref humidMap[z * ChunkSize + x],ref humidMin,ref heightHumidInvRange);
 
-                var h = (int)(normalized * (ChunkHeight - 1));
+                var hM = GetNormalizeValue(ref heightMapMountain[z * ChunkSize + x], ref heightMountainMin, ref heightMountainInvRange);
+                var hF = GetNormalizeValue(ref heightMapForest  [z * ChunkSize + x], ref heightForestMin, ref heightForestInvRange);
+                var hD = GetNormalizeValue(ref heightMapDesert  [z * ChunkSize + x], ref heightDesertMin, ref heightDesertInvRange);
+                
+                
+                BiomeAdvantage(temp, humid, ref wM, ref wF, ref wD);
+                var finalH = wM * hM + wF * hF + wD * hD;
+
+                var h = (int)( finalH * (ChunkHeight - 1) );
                 h = Math.Clamp(h, 0, ChunkHeight - 1);
 
                 for (var y = 0; y < ChunkHeight; ++y)
                 {
                     var index = (y * ChunkSize + z) * ChunkSize + x;
                     
-                    if(y==0) chunk.ChunkData[index] = (byte)BlockType.BEDROCK;
-                    else if ((y <= h) && (caveMap[index] < 0.0f))
+                    if(y==0) chunk.ChunkData[index] = (byte)BlockType.STONE; //bedrock
+                    else if ((y <= h) && (caveMap[index] < _caveDensity))
                     {
                         if(y>200&&y<=230) chunk.ChunkData[index] = (byte)BlockType.STONE;
-                        else if(y>230) chunk.ChunkData[index] = (byte)BlockType.SNOW;
+                        else if(y>230) chunk.ChunkData[index] = (byte)BlockType.STONE; //snow
                         else if (y<=h-5) chunk.ChunkData[index] = (byte)BlockType.STONE;
                         else if (y<=h-1) chunk.ChunkData[index] = (byte)BlockType.DIRT;
                         else chunk.ChunkData[index] = (byte)BlockType.GRASS;
                     }
                     else if(chunk.ChunkData[index]!=(byte)BlockType.LEAVES) chunk.ChunkData[index] = (byte)BlockType.AIR;
                 }
-                
+                var valueInRange = rnd.NextSingle() * (max - min) + min;
                 var tree = treesMap[z * ChunkSize + x]*valueInRange;
                 
                 if (tree >= _treesDensity||x < 2 || x > 13 || z < 2 || z > 13) continue;
 
-                if (h < 0 || h > 100 || caveMap[(h * ChunkSize + z) * ChunkSize + x]<0.0f) continue;
+                if (h < 0 || h >= 200 || caveMap[(h * ChunkSize + z) * ChunkSize + x]>=_caveDensity) continue;
 
                 /*generowanie pnia*/
                 for (int dy = 1; dy <= 4; ++dy) {
@@ -153,6 +188,47 @@ public class TerrainGen
 
     }
     
+    public void SetGlobalMinMax(ref float Min, ref float invRange, float frequency, string code)
+    {
+        
+        var Max = float.NegativeInfinity;
+        for (int chunk_x = 0; chunk_x < 32; ++chunk_x) {
+            for (int chunk_y = 0; chunk_y < 32; ++chunk_y) {
+                var tempMap = _biomeGeneration.GenerateNoise2D( ChunkSize, chunk_x, chunk_y);
+
+                for (int i = 0; i < ChunkSize * ChunkSize; ++i) {
+                    Min = Math.Min(Min, tempMap[i]);
+                    Max = Math.Max(Max, tempMap[i]);
+                }
+            }
+        }
+        Min = (float)(Min - (Max-Min) * 0.1);
+        Max = (float)(Max + (Max-Min) * 0.1);
+        invRange = (Max != Min) ? (1.0f / (Max - Min)) : 0.0f;
+    }
+
+    public float GetNormalizeValue(ref float value, ref float Min, ref float invRange)
+    {
+        float norm = (value - Min) * invRange;
+        norm = Math.Clamp(norm, 0.0f, 1.0f);
+        /*int h = static_cast<int>(normalized * (CHUNK_HEIGHT - 1));*/
+        /*h = std::clamp(h, 0, CHUNK_HEIGHT - 1) - 100;*/
+        return norm;
+    }
+
+    public void BiomeAdvantage(float temp, float humid, ref float wMountain, ref float wForest, ref float wDesert)
+    {
+        var mountain = Math.Sqrt(Math.Pow(temp-Mountains.X,2)+Math.Pow( humid-Mountains.Y,2))+ 1e-5f;
+        var forest = Math.Sqrt(Math.Pow(temp-Forest.X,2)+Math.Pow(humid-Forest.Y,2))+ 1e-5f;
+        var desert = Math.Sqrt(Math.Pow(temp-Desert.X,2)+Math.Pow(humid-Desert.Y,2))+ 1e-5f;
+        var iM = 1/mountain;
+        var iF = 1/forest;
+        var iD = 1/desert;
+        var sum = iM + iF + iD;
+        wMountain = (float)(iM/sum);
+        wForest = (float)(iF/sum);
+        wDesert = (float)(iD/sum);
+    }
 }
 
 /// <summary>

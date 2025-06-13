@@ -13,11 +13,11 @@ public class UserModel
     
     public string UdpPort { get; set; } = string.Empty;
     
-    public int X { get; set; }
+    public float X { get; set; }
     
-    public int Y { get; set; }
+    public float Y { get; set; }
     
-    public int Z { get; set; }
+    public float Z { get; set; }
     
     public float RotationX { get; set; }
     
@@ -46,22 +46,20 @@ public class UserModel
             catch (SocketException e)
             {
                 SrvLog.Console.Log("TCP_Listener", $"Error sending data to client: {e.Message}", SrvLog.LogTypes.WARNING);
-                this.Cts?.Cancel();
-                this.Socket?.Close();
-                this.Socket?.Dispose();
-                SrvLog.Console.Log("TCP_Listener", $"Client '{this.Username}' disconnected", SrvLog.LogTypes.INFO);
+                Cts?.Cancel();
+                Socket?.Close();
+                Socket?.Dispose();
+                SrvLog.Console.Log("TCP_Listener", $"Client '{Username}' disconnected", SrvLog.LogTypes.INFO);
                 userManager.RemoveUser(this);
-                this.Cts?.Dispose();
-                this.ActiveRegions.Clear();
-                this.ActiveChunks.Clear();
+                Cts?.Dispose();
+                ActiveRegions.Clear();
+                ActiveChunks.Clear();
             }
         }
     }
     
     public async Task SendUdpAsync(byte[] data)
     {
-        //TODO: implement UDP send and lock
-        
         var endpoint = new IPEndPoint(IPAddress.Parse(UdpAddress), int.Parse(UdpPort));
         var udpClient = new UdpClient();
         udpClient.Connect(endpoint);

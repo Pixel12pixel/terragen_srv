@@ -9,13 +9,13 @@ public class PositionUpdateModel
     public string Username { get; set; } = string.Empty;
     
     [ProtoMember(2)]
-    public int X { get; set; }
+    public float X { get; set; }
     
     [ProtoMember(3)]
-    public int Y { get; set; }
+    public float Y { get; set; }
     
     [ProtoMember(4)]
-    public int Z { get; set; }
+    public float Z { get; set; }
     
     [ProtoMember(5)]
     public float RotationX { get; set; }
