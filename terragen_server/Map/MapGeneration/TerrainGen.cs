@@ -37,11 +37,10 @@ public class TerrainGen
     /// <param name="myEncodedTree2D">FastNoise Encoded tree 2D</param>
     /// <param name="myEncodedTree3D">FastNoise Encoded tree 3D</param>
     /// <param name="caveDensity">cave density float</param>
-    public TerrainGen(int seed, string myEncodedTree2D, string myEncodedTree3D, float caveDensity = 0.0f, float treesDensity = 0.04f)
+    public TerrainGen(int seed, string myEncodedTree2D, string myEncodedTree3D, float caveDensity = 0.0f)
     {
-        _biomeGeneration = new BiomeGeneration(seed , myEncodedTree2D, myEncodedTree3D);
+        _biomeGeneration = new BiomeGeneration(seed , myEncodedTree2D, myEncodedTree3D, caveDensity);
         _caveDensity = caveDensity;
-        _treesDensity = treesDensity;
         
         SetGlobalMinMax(ref humidMin,ref heightHumidInvRange, 0.002f, "EwAfhes/BwA=");
         SetGlobalMinMax(ref tempMin, ref heightTempInvRange, 0.0015f, "DQAEAAAAAAAAQAcAAAAAAD8AAAAAAA==");
@@ -53,9 +52,9 @@ public class TerrainGen
     /// <summary>
     /// Sets the global min and max values for terrain generation.
     /// </summary>
-    public void SetMinMax()
+    /*public void SetMinMax()
     {
-        var size = 1024;
+        var size = 128;
         
         var globalMax = float.NegativeInfinity;
         
@@ -88,7 +87,7 @@ public class TerrainGen
         _invRange = (globalMax != _globalMin) ? (1.0f / (globalMax - _globalMin)) : 0.0f;
         
         //readySignal.SetResult();
-    }
+    }*/
 
     /// <summary>
     /// Generates a chunk of terrain based on the provided chunk coordinates.
@@ -100,7 +99,6 @@ public class TerrainGen
     {
         var rnd = new Random();
         float min = 0.0f, max = 8.0f;
-        
         
         var chunk = new ChunkModel
         {
@@ -118,6 +116,10 @@ public class TerrainGen
         {
             for (var z = 0; z < ChunkSize; ++z)
             {
+                var index2D = z * ChunkSize + x;
+                var valueInRange = rnd.NextSingle() * (max - min) + min;
+                var tree = treesMap[index2D]*valueInRange;
+                
                 var temp  = GetNormalizeValue(ref tempMap [z * ChunkSize + x],ref tempMin,ref heightTempInvRange);
                 var humid = GetNormalizeValue(ref humidMap[z * ChunkSize + x],ref humidMin,ref heightHumidInvRange);
 
@@ -127,59 +129,42 @@ public class TerrainGen
                 
                 
                 BiomeAdvantage(temp, humid, ref wM, ref wF, ref wD);
+
+                var biome = PickBiome(ref wM, ref wF, ref wD);
+                    
                 var finalH = wM * hM + wF * hF + wD * hD;
 
                 var h = (int)( finalH * (ChunkHeight - 1) );
                 h = Math.Clamp(h, 0, ChunkHeight - 1);
-
+                
                 for (var y = 0; y < ChunkHeight; ++y)
                 {
-                    var index = (y * ChunkSize + z) * ChunkSize + x;
-                    
-                    if(y==0) chunk.ChunkData[index] = (byte)BlockType.STONE; //bedrock
-                    else if ((y <= h) && (caveMap[index] < _caveDensity))
+                    switch (biome)
                     {
-                        if(y>200&&y<=230) chunk.ChunkData[index] = (byte)BlockType.STONE;
-                        else if(y>230) chunk.ChunkData[index] = (byte)BlockType.STONE; //snow
-                        else if (y<=h-5) chunk.ChunkData[index] = (byte)BlockType.STONE;
-                        else if (y<=h-1) chunk.ChunkData[index] = (byte)BlockType.DIRT;
-                        else chunk.ChunkData[index] = (byte)BlockType.GRASS;
-                    }
-                    else if(chunk.ChunkData[index]!=(byte)BlockType.LEAVES) chunk.ChunkData[index] = (byte)BlockType.AIR;
-                }
-                var valueInRange = rnd.NextSingle() * (max - min) + min;
-                var tree = treesMap[z * ChunkSize + x]*valueInRange;
-                
-                if (tree >= _treesDensity||x < 2 || x > 13 || z < 2 || z > 13) continue;
-
-                if (h < 0 || h >= 200 || caveMap[(h * ChunkSize + z) * ChunkSize + x]>=_caveDensity) continue;
-
-                /*generowanie pnia*/
-                for (int dy = 1; dy <= 4; ++dy) {
-                    int yy = h + dy;
-                    int index = (yy * ChunkSize + z) * ChunkSize + x;
-                    chunk.ChunkData[index] = (byte)BlockType.WOOD;
-                }
-
-                /*generowanie lisci*/
-                for (int dx = -2; dx <= 2; ++dx) {
-                    for (int dy = 3; dy <= 6; ++dy) {
-                        for (int dz = -2; dz <= 2; ++dz) {
-
-                            if (dx*dx + (dy-4)*(dy-4) + dz*dz > 8)
-                                continue;
-
-                            int xx = x + dx;
-                            int yy = h + dy;
-                            int zz = z + dz;
-
-                            int idx = (yy * ChunkSize + zz) * ChunkSize + xx;
-
-                            if (chunk.ChunkData[idx] == (byte)BlockType.AIR) {
-                                chunk.ChunkData[idx] = (byte)BlockType.LEAVES;
-                            }
+                        case Biome.Mountains:
+                        {
+                            var index3D = (y * ChunkSize + z) * ChunkSize + x;
+                            chunk.ChunkData[index3D] = _biomeGeneration.MountainsBlockValue(x, z, y, h, caveMap[index3D], chunk.ChunkData[index3D]);
+                            if(ShouldGenerateTree( x, y, z, h, tree, 0.01f, caveMap[index3D], 160))
+                                _biomeGeneration.GenTree( x, z, h, ref chunk);
+                            break;
+                        }
+                        case Biome.Forest:
+                        {
+                            var index3D = (y * ChunkSize + z) * ChunkSize + x;
+                            chunk.ChunkData[index3D] = _biomeGeneration.ForestBlockValue(x, z, y, h, caveMap[index3D], chunk.ChunkData[index3D]);
+                            if(ShouldGenerateTree( x, y, z, h, tree, 0.04f, caveMap[index3D], 200))
+                                _biomeGeneration.GenTree( x, z, h, ref chunk);
+                            break;
+                        }
+                        case Biome.Desert:
+                        {
+                            var index = (y * ChunkSize + z) * ChunkSize + x;
+                            chunk.ChunkData[index] = _biomeGeneration.DesertBlockValue(x, z, y, h, caveMap[index], chunk.ChunkData[index]);
+                            break;
                         }
                     }
+                    
                 }
             }
         }
@@ -194,7 +179,7 @@ public class TerrainGen
         var Max = float.NegativeInfinity;
         for (int chunk_x = 0; chunk_x < 32; ++chunk_x) {
             for (int chunk_y = 0; chunk_y < 32; ++chunk_y) {
-                var tempMap = _biomeGeneration.GenerateNoise2D( ChunkSize, chunk_x, chunk_y);
+                var tempMap = _biomeGeneration.GenerateNoise2D( ChunkSize, chunk_x, chunk_y, frequency, code);
 
                 for (int i = 0; i < ChunkSize * ChunkSize; ++i) {
                     Min = Math.Min(Min, tempMap[i]);
@@ -229,19 +214,21 @@ public class TerrainGen
         wForest = (float)(iF/sum);
         wDesert = (float)(iD/sum);
     }
+    
+    Biome PickBiome(ref float wM, ref float wF, ref float wD)
+    {
+        if (wM > wF && wM > wD) return Biome.Mountains;
+        if (wF > wM && wF > wD) return Biome.Forest;
+        return Biome.Desert;
+    }
+
+    public bool ShouldGenerateTree(int x, int y, int z, int h, float tree, float treesDensity, float caveValue, int treesLevel)
+    {
+        if (tree >= treesDensity || x < 2 || x > 13 || z < 2 || z > 13) return false;
+
+        if (h <= 0 || h >= treesLevel || caveValue>=_caveDensity || y!=h) return false;
+        
+        return true;
+    }
 }
 
-/// <summary>
-/// BlockType enum representing different types of blocks in the terrain.
-/// </summary>
-public enum BlockType : byte
-{
-    AIR =0,
-    GRASS =1,
-    DIRT =2,
-    STONE =3,
-    WOOD =4,
-    LEAVES =5,
-    BEDROCK =6,
-    SNOW =7
-}

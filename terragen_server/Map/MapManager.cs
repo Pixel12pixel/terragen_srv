@@ -23,7 +23,7 @@ public class MapManager(int seed)
     {
         _terrainGen = new TerrainGen(seed, EncodeTree2D, EncodeTree3D);
 
-        _terrainGen.SetMinMax();
+        /*_terrainGen.SetMinMax();*/
         
         SrvLog.Console.Log("MAP_MANAGER", "MapManager initialized", SrvLog.LogTypes.INFO);
     }
